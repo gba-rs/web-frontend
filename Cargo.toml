@@ -1,0 +1,22 @@
+[package]
+authors = [
+    "Eric Nowac <nowace@msoe.edu>",
+]
+categories = ["gba", "emulation"]
+description = "web frontend for the gba-emu crate"
+edition = "2018"
+keywords = ["yew", "wasm", "wasm-bindgen", "web", "gba", "emulation"]
+license = "MIT/Apache-2.0"
+name = "gba-web-frontend"
+readme = "README.md"
+repository = "https://gitlab.com/msoe.edu/sdl/sd20/cgmmn/web-frontend"
+version = "0.1.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+gba-emulator = {path = "../gba-emu"}
+wasm-bindgen = "^0.2"
+yew = "0.8"
+
