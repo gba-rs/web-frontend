@@ -20,7 +20,7 @@ impl log::Log for ConsoleLogger {
             };
 
             if !target.contains("yew") {
-                ConsoleService::new().log(&format!("[{}] {} - {}", target, record.level(), record.args()));
+                ConsoleService::new().log(&format!("[{}][{}] {}", target, record.level(), record.args()));
             }
         }
     }
