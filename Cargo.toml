@@ -19,4 +19,4 @@ crate-type = ["cdylib"]
 gba-emulator = {path = "../gba-emu"}
 wasm-bindgen = "^0.2"
 yew = "0.8"
-
+log = "0.4.8"

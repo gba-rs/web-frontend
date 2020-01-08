@@ -1,12 +1,11 @@
 use yew::prelude::*;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
-use yew::services::console::ConsoleService;
 use yew::{html, Component, ComponentLink, Html, ShouldRender};
 use gba_emulator::gba::GBA;
 use gba_emulator::cpu::{cpu::InstructionSet, cpu::ARM_PC};
-use gba_emulator::arm_formats::common::Instruction;
 use std::rc::Rc;
 use std::cell::RefCell;
+use log::{info, SetLoggerError};
 
 use crate::components::{
     registers::Registers, 
@@ -16,6 +15,8 @@ use crate::components::{
     memory_viewer::MemoryViewer
 };
 
+use crate::logging;
+
 pub const start_pc: u32 = 0x08000000;
 
 struct DisassemblyElement {
@@ -24,7 +25,6 @@ struct DisassemblyElement {
     instruction_asm: String,
     selected: bool
 }
-
 
 pub struct App {
     reader: ReaderService,
@@ -75,7 +75,15 @@ impl Component for App {
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        ConsoleService::new().log("Created Application");
+        match logging::init_logger() {
+            Ok(_) => {
+                info!("Logger initialized succesfully");
+            },
+            Err(e) => {
+                info!("Logger failed to initialize");
+            }
+        }
+        info!("Created Application");
         App {
             reader: ReaderService::new(),
             link,
@@ -119,13 +127,13 @@ impl Component for App {
             Msg::Init => {
                 self.gba = Rc::new(RefCell::new(GBA::new(start_pc, &self.bios, &self.rom)));
                 self.initialized = true;
-                ConsoleService::new().log("Created new Emulator");
+                info!("Created new Emulator");
                 true
             },
             Msg::Step(step_count) => {
                 for _ in 0..step_count {
                     self.gba.as_ref().borrow_mut().step();
-                    ConsoleService::new().log("Step");
+                    info!("Step");
                 }
                 true
             },
@@ -195,7 +203,7 @@ impl Component for App {
             }
             Msg::Disassemble(instr_set) => {
                 self.disassembly.clear();
-                ConsoleService::new().log(&format!("Rom size: {}", self.rom.len()));
+                info!("Rom size: {}", self.rom.len());
                 match instr_set {
                     InstructionSet::Arm => {
                         for i in (0..self.rom.len()).step_by(4) {

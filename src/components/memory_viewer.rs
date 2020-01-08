@@ -1,9 +1,9 @@
 use yew::prelude::*;
 use yew::{html, Component, ComponentLink, Html, ShouldRender};
 use gba_emulator::gba::GBA;
-use yew::services::console::ConsoleService;
 use std::rc::Rc;
 use std::cell::RefCell;
+use log::{info};
 
 pub struct MemoryViewer {
     props: MemoryViewerProp,
@@ -54,11 +54,11 @@ impl Component for MemoryViewer {
                 self.hex_string.retain(|c| !c.is_whitespace());
                 match u8::from_str_radix(&self.hex_string, 16) {
                     Ok(val) => {
-                        ConsoleService::new().log(&format!("Writing value {:X}", val));
+                        info!("Writing value {:X}", val);
                         self.props.gba.borrow_mut().mem_map.write_u8(address, val);
                     },
                     Err(e) => {
-                        ConsoleService::new().log(&format!("Error parsing string:{}", self.hex_string));
+                        info!("Error parsing string:{}", self.hex_string);
                     }
                 }
                 true

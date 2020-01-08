@@ -1,6 +1,7 @@
 #![recursion_limit="2048"]
 mod app;
 mod components;
+mod logging;
 
 use wasm_bindgen::prelude::*;
 
