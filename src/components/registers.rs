@@ -1,10 +1,10 @@
 use yew::prelude::*;
 use yew::{html, Component, ComponentLink, Html, ShouldRender};
-use yew::services::console::ConsoleService;
 use gba_emulator::gba::GBA;
 use gba_emulator::cpu::cpu::InstructionSet;
 use std::rc::Rc;
 use std::cell::RefCell;
+use log::{info};
 
 pub struct Registers {
     props: RegistersProp,
@@ -79,7 +79,7 @@ impl Component for Registers {
                                 self.props.gba.borrow_mut().cpu.set_register(self.update_reg_num, val)
                             },
                             Err(_) => {
-                                ConsoleService::new().log(&format!("Error updating r{}: {}", self.update_reg_num, self.updated_reg_hex));
+                                info!("Error updating r{}: {}", self.update_reg_num, self.updated_reg_hex);
                             }
                         }                    
                     },
@@ -91,7 +91,7 @@ impl Component for Registers {
                                 self.props.gba.borrow_mut().cpu.set_register(self.update_reg_num, val)
                             },
                             Err(_) => {
-                                ConsoleService::new().log(&format!("Error updating r{}: {}", self.update_reg_num, self.updated_reg_dec));
+                                info!("Error updating r{}: {}", self.update_reg_num, self.updated_reg_dec);
                             }
                         }                    
                     }
