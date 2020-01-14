@@ -122,7 +122,7 @@ impl Renderable<Registers> for Registers {
                         </tr>
                     </thead>
                     <tbody>
-                        {for (0..if self.props.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { 16 } else { 10 }).map(|val|{
+                        {for (0..if self.props.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { 16 } else { 11 }).map(|val|{
                             let reg_val = self.props.gba.borrow().cpu.get_register(val);
                             let reg_num = val;
                             html! {

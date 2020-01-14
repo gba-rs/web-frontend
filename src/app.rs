@@ -2,7 +2,7 @@ use yew::prelude::*;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use yew::{html, Component, ComponentLink, Html, ShouldRender};
 use gba_emulator::gba::GBA;
-use gba_emulator::cpu::{cpu::InstructionSet, cpu::ARM_PC};
+use gba_emulator::cpu::{cpu::InstructionSet, cpu::ARM_PC, cpu::THUMB_PC};
 use std::rc::Rc;
 use std::cell::RefCell;
 use log::{info, SetLoggerError};
@@ -231,14 +231,36 @@ impl Component for App {
                                     });
                                 }
                             }
-
-                            
                         }
 
                         self.disassembled = true;
                     },
                     InstructionSet::Thumb => {
+                        for i in (0..self.rom.len()).step_by(2) {
+                            let instruction: u16 = self.rom[i] as u16 | ((self.rom[i as usize + 1] as u16) << 8);
 
+                            let decode_result = self.gba.borrow().cpu.decode(instruction as u32);
+                            match decode_result {
+                                Ok(decoded_instruction) => {
+                                    self.disassembly.push(DisassemblyElement{
+                                        address: (i as u32) + start_pc,
+                                        instruction_hex: instruction as u32,
+                                        instruction_asm: decoded_instruction.asm(),
+                                        selected: ((i as u32) + start_pc) == self.gba.borrow().cpu.get_register(THUMB_PC)
+                                    });
+                                },
+                                Err(e) => {
+                                    self.disassembly.push(DisassemblyElement {
+                                        address: (i as u32) + start_pc,
+                                        instruction_hex: instruction as u32,
+                                        instruction_asm: "???".to_string(),
+                                        selected: ((i as u32) + start_pc) == self.gba.borrow().cpu.get_register(THUMB_PC)
+                                    });
+                                }
+                            }
+                        }
+
+                        self.disassembled = true;
                     }
                 }
                 true
