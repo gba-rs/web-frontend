@@ -131,6 +131,8 @@ impl Component for App {
                 self.initialized = true;
                 info!("Created new Emulator");
 
+                self.update(Msg::Disassemble);
+
                 true
             },
             Msg::Step(step_count) => {
