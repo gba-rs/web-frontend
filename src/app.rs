@@ -18,6 +18,8 @@ use crate::components::{
 use crate::logging;
 
 pub const start_pc: u32 = 0x08000000;
+pub const follow_min: i64 = -10;
+pub const follow_max: i64 = 10;
 
 struct DisassemblyElement {
     address: u32,
@@ -64,7 +66,7 @@ pub enum Msg {
     Step(u8),
     ToggleHex,
     Files(Vec<File>, bool),
-    Disassemble(InstructionSet),
+    Disassemble,
     ToggleFollow,
     UpdateRange(RangeUpdate),
     UpdateInputString(String, RangeUpdate)
@@ -128,13 +130,30 @@ impl Component for App {
                 self.gba = Rc::new(RefCell::new(GBA::new(start_pc, &self.bios, &self.rom)));
                 self.initialized = true;
                 info!("Created new Emulator");
+
                 true
             },
             Msg::Step(step_count) => {
                 for _ in 0..step_count {
                     self.gba.as_ref().borrow_mut().step();
-                    info!("Step");
                 }
+
+                if self.follow_pc {
+                    // Update the disassembly with the given pc follow range
+                    self.disassembly.clear();
+                    let current_pc = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
+                    let current_instruction_size = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { 4 } else { 2 };
+                    
+                    let mut address = current_pc as i64 + (follow_min * current_instruction_size);
+                    let total_bytes = (follow_max * current_instruction_size - follow_min * current_instruction_size) as u32;
+
+                    if address < 0 {
+                        address = 0;
+                    }
+
+                    self.disassemble(address as u32, total_bytes);
+                }
+
                 true
             },
             Msg::ToggleHex => {
@@ -180,6 +199,8 @@ impl Component for App {
                             },
                             Err(e) => {}
                         }
+
+                        self.update(Msg::Disassemble);
                     }
                 }
                 true
@@ -201,67 +222,14 @@ impl Component for App {
                 }
                 false
             }
-            Msg::Disassemble(instr_set) => {
-                self.disassembly.clear();
-                info!("Rom size: {}", self.rom.len());
-                match instr_set {
-                    InstructionSet::Arm => {
-                        for i in (0..self.rom.len()).step_by(4) {
-                            let instruction: u32 = self.rom[i] as u32 | 
-                            ((self.rom[i as usize + 1] as u32) << 8) | 
-                            ((self.rom[i as usize + 2] as u32) << 16) | 
-                            ((self.rom[i as usize + 3] as u32) << 24);
+            Msg::Disassemble => {
+                if !self.follow_pc {
+                    self.disassembly.clear();
+                    let current_instruction_size = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { 4 } else { 2 };
+                    
+                    let total_bytes = (self.dis_max as i64 - self.dis_min as i64) as u32;
 
-                            let decode_result = self.gba.borrow().cpu.decode(instruction);
-                            match decode_result {
-                                Ok(decoded_instruction) => {
-                                    self.disassembly.push(DisassemblyElement{
-                                        address: (i as u32) + start_pc,
-                                        instruction_hex: instruction,
-                                        instruction_asm: decoded_instruction.asm(),
-                                        selected: ((i as u32) + start_pc) == self.gba.borrow().cpu.get_register(ARM_PC)
-                                    });
-                                },
-                                Err(e) => {
-                                    self.disassembly.push(DisassemblyElement {
-                                        address: (i as u32) + start_pc,
-                                        instruction_hex: instruction,
-                                        instruction_asm: "???".to_string(),
-                                        selected: ((i as u32) + start_pc) == self.gba.borrow().cpu.get_register(ARM_PC)
-                                    });
-                                }
-                            }
-                        }
-
-                        self.disassembled = true;
-                    },
-                    InstructionSet::Thumb => {
-                        for i in (0..self.rom.len()).step_by(2) {
-                            let instruction: u16 = self.rom[i] as u16 | ((self.rom[i as usize + 1] as u16) << 8);
-
-                            let decode_result = self.gba.borrow().cpu.decode(instruction as u32);
-                            match decode_result {
-                                Ok(decoded_instruction) => {
-                                    self.disassembly.push(DisassemblyElement{
-                                        address: (i as u32) + start_pc,
-                                        instruction_hex: instruction as u32,
-                                        instruction_asm: decoded_instruction.asm(),
-                                        selected: ((i as u32) + start_pc) == self.gba.borrow().cpu.get_register(THUMB_PC)
-                                    });
-                                },
-                                Err(e) => {
-                                    self.disassembly.push(DisassemblyElement {
-                                        address: (i as u32) + start_pc,
-                                        instruction_hex: instruction as u32,
-                                        instruction_asm: "???".to_string(),
-                                        selected: ((i as u32) + start_pc) == self.gba.borrow().cpu.get_register(THUMB_PC)
-                                    });
-                                }
-                            }
-                        }
-
-                        self.disassembled = true;
-                    }
+                    self.disassemble(self.dis_min, total_bytes);
                 }
                 true
             },
@@ -332,37 +300,14 @@ impl Renderable<App> for App {
 impl App {
     pub fn view_disassembly(&self) -> Html<Self> {
         let instruction_set = self.gba.borrow().cpu.current_instruction_set;
-        let current_pc_num = if instruction_set == InstructionSet::Arm { 15 } else { 10 };
+        let current_pc_num = if instruction_set == InstructionSet::Arm { ARM_PC } else { THUMB_PC };
 
         if self.disassembled {
             let current_pc = self.gba.borrow().cpu.get_register(current_pc_num);
-            let mut disassembly_start: i64;
-            
-            let mut disassembly_end: i64;
-
-            if self.follow_pc {
-                disassembly_start = ((current_pc as i64 - start_pc as i64) - 100) / 4;
-                disassembly_end = ((current_pc as i64 - start_pc as i64) + 100) / 4;
-            } else {
-                disassembly_start = (self.dis_min as i64 - start_pc as i64) / 4;
-                disassembly_end = (self.dis_max as i64 - start_pc as i64) / 4;
-            }
-
-            if disassembly_start < 0 {
-                disassembly_start = 0;
-            }
-
-            if disassembly_end < 0 {
-                disassembly_end = 0;
-            }
-
-            if disassembly_end > self.disassembly.len() as i64{
-                disassembly_end = self.disassembly.len() as i64;
-            }
 
             html! {
                 <div class="code-block">
-                    {for (disassembly_start..disassembly_end).map(|val|{
+                    {for (0..self.disassembly.len()).map(|val|{
                         let element = &self.disassembly[val as usize];
 
                         html! {
@@ -477,13 +422,75 @@ impl App {
                     <div class="btn-group" role="group">
                         <button class="btn btn-outline-primary" onclick=|_|{Msg::Init}>{"Init Emulator"}</button>
                         <button class="btn btn-outline-primary" onclick=|_|{Msg::Step(1)}>{"Step"}</button>
-                        <button class="btn btn-outline-primary" onclick=|_|{Msg::Disassemble(instruction_set)}>{"Disassemble"}</button>
                     </div>
                 </div>
                 
                 // <Status gba={self.gba.clone()}/>
                 // <Cpsr gba={self.gba.clone()}/>
             </>
+        }
+    }
+
+    fn disassemble(&mut self, address: u32, total_bytes: u32) {
+        let memory_block = self.gba.borrow().mem_map.read_block(address as u32, total_bytes);
+        match self.gba.borrow().cpu.current_instruction_set {
+            InstructionSet::Arm => {
+                for i in (0..memory_block.len()).step_by(4) {
+                    let instruction: u32 = memory_block[i] as u32 | 
+                    ((memory_block[i as usize + 1] as u32) << 8) | 
+                    ((memory_block[i as usize + 2] as u32) << 16) | 
+                    ((memory_block[i as usize + 3] as u32) << 24);
+
+                    let decode_result = self.gba.borrow().cpu.decode(instruction);
+                    match decode_result {
+                        Ok(decoded_instruction) => {
+                            self.disassembly.push(DisassemblyElement{
+                                address: (i as u32) + address,
+                                instruction_hex: instruction,
+                                instruction_asm: decoded_instruction.asm(),
+                                selected: ((i as u32) + address) == self.gba.borrow().cpu.get_register(ARM_PC)
+                            });
+                        },
+                        Err(e) => {
+                            self.disassembly.push(DisassemblyElement {
+                                address: (i as u32) + address,
+                                instruction_hex: instruction,
+                                instruction_asm: "???".to_string(),
+                                selected: ((i as u32) + address) == self.gba.borrow().cpu.get_register(ARM_PC)
+                            });
+                        }
+                    }
+                }
+
+                self.disassembled = true;
+            },
+            InstructionSet::Thumb => {
+                for i in (0..memory_block.len()).step_by(2) {
+                    let instruction: u16 = memory_block[i] as u16 | ((memory_block[i as usize + 1] as u16) << 8);
+
+                    let decode_result = self.gba.borrow().cpu.decode(instruction as u32);
+                    match decode_result {
+                        Ok(decoded_instruction) => {
+                            self.disassembly.push(DisassemblyElement{
+                                address: (i as u32) + address,
+                                instruction_hex: instruction as u32,
+                                instruction_asm: decoded_instruction.asm(),
+                                selected: ((i as u32) + address) == self.gba.borrow().cpu.get_register(THUMB_PC)
+                            });
+                        },
+                        Err(e) => {
+                            self.disassembly.push(DisassemblyElement {
+                                address: (i as u32) + address,
+                                instruction_hex: instruction as u32,
+                                instruction_asm: "???".to_string(),
+                                selected: ((i as u32) + address) == self.gba.borrow().cpu.get_register(THUMB_PC)
+                            });
+                        }
+                    }
+                }
+
+                self.disassembled = true;
+            }
         }
     }
 }
