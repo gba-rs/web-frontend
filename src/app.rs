@@ -66,7 +66,6 @@ pub enum Msg {
     Step(u8),
     ToggleHex,
     Files(Vec<File>, bool),
-    Disassemble,
     ToggleFollow,
     UpdateRange(RangeUpdate),
     UpdateInputString(String, RangeUpdate)
@@ -131,7 +130,9 @@ impl Component for App {
                 self.initialized = true;
                 info!("Created new Emulator");
 
-                self.update(Msg::Disassemble);
+                if self.follow_pc {
+                    self.follow_pc_disassemble();
+                }
 
                 true
             },
@@ -141,19 +142,7 @@ impl Component for App {
                 }
 
                 if self.follow_pc {
-                    // Update the disassembly with the given pc follow range
-                    self.disassembly.clear();
-                    let current_pc = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
-                    let current_instruction_size = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { 4 } else { 2 };
-                    
-                    let mut address = current_pc as i64 + (follow_min * current_instruction_size);
-                    let total_bytes = (follow_max * current_instruction_size - follow_min * current_instruction_size) as u32;
-
-                    if address < 0 {
-                        address = 0;
-                    }
-
-                    self.disassemble(address as u32, total_bytes);
+                    self.follow_pc_disassemble();
                 }
 
                 true
@@ -202,7 +191,11 @@ impl Component for App {
                             Err(e) => {}
                         }
 
-                        self.update(Msg::Disassemble);
+                        if !self.follow_pc {
+                            self.disassembly.clear();                    
+                            let total_bytes = (self.dis_max as i64 - self.dis_min as i64) as u32;
+                            self.disassemble(self.dis_min, total_bytes);
+                        }
                     }
                 }
                 true
@@ -223,17 +216,6 @@ impl Component for App {
                     }
                 }
                 false
-            }
-            Msg::Disassemble => {
-                if !self.follow_pc {
-                    self.disassembly.clear();
-                    let current_instruction_size = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { 4 } else { 2 };
-                    
-                    let total_bytes = (self.dis_max as i64 - self.dis_min as i64) as u32;
-
-                    self.disassemble(self.dis_min, total_bytes);
-                }
-                true
             },
             Msg::Files(files, rom) => {
                 for file in files.into_iter() {
@@ -380,7 +362,6 @@ impl App {
     }
 
     pub fn view_control(&self) -> Html<Self> {
-        let instruction_set = self.gba.borrow().cpu.current_instruction_set;
         html! {
             <>
                 // <h4>{"Control"}</h4>
@@ -431,6 +412,22 @@ impl App {
                 // <Cpsr gba={self.gba.clone()}/>
             </>
         }
+    }
+
+    fn follow_pc_disassemble(&mut self) {
+        // Update the disassembly with the given pc follow range
+        self.disassembly.clear();
+        let current_pc = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
+        let current_instruction_size = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { 4 } else { 2 };
+        
+        let mut address = current_pc as i64 + (follow_min * current_instruction_size);
+        let total_bytes = (follow_max * current_instruction_size - follow_min * current_instruction_size) as u32;
+
+        if address < 0 {
+            address = 0;
+        }
+
+        self.disassemble(address as u32, total_bytes);
     }
 
     fn disassemble(&mut self, address: u32, total_bytes: u32) {
