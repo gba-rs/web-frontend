@@ -1,4 +1,4 @@
-use log::{Record, Level, Metadata, LevelFilter, SetLoggerError};
+use log::{Record, Level, Metadata, SetLoggerError};
 use yew::services::console::ConsoleService;
 
 pub struct ConsoleLogger;
@@ -29,7 +29,7 @@ impl log::Log for ConsoleLogger {
 }
 
 pub fn init_logger() -> Result<(), SetLoggerError> {
-    log::set_logger(&LOGGER);
+    log::set_logger(&LOGGER)?;
     log::set_max_level(Level::Trace.to_level_filter());
     Ok(())
 }

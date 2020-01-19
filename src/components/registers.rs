@@ -1,5 +1,5 @@
 use yew::prelude::*;
-use yew::{html, Component, ComponentLink, Html, ShouldRender};
+use yew::{html, Component, ComponentLink, InputData, KeyPressEvent, Html, ShouldRender};
 use gba_emulator::gba::GBA;
 use gba_emulator::cpu::cpu::InstructionSet;
 use std::rc::Rc;
@@ -10,10 +10,11 @@ pub struct Registers {
     props: RegistersProp,
     updated_reg_hex: String,
     updated_reg_dec: String,
-    update_reg_num: u8
+    update_reg_num: u8,
+    link: ComponentLink<Self>
 }
 
-#[derive(Properties)]
+#[derive(Properties, Clone)]
 pub struct RegistersProp {
     #[props(required)]
     pub gba: Rc<RefCell<GBA>>,
@@ -37,12 +38,13 @@ impl Component for Registers {
     type Message = Msg;
     type Properties = RegistersProp;
 
-    fn create(props: Self::Properties, _: ComponentLink<Self>) -> Self {
+    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Registers {
             props: props,
             updated_reg_dec: "".to_string(),
             updated_reg_hex: "".to_string(),
-            update_reg_num: 0
+            update_reg_num: 0,
+            link: link
         }
     }
 
@@ -106,10 +108,8 @@ impl Component for Registers {
         self.props = props;
         true
     }
-}
 
-impl Renderable<Registers> for Registers {
-    fn view(&self) -> Html<Self> {
+    fn view(&self) -> Html {
         html! {
             <div>
                 <h4>{"Registers"}</h4>
@@ -130,16 +130,16 @@ impl Renderable<Registers> for Registers {
                                     <td class="text-left">{format!("r{}", val)}</td>
                                     <td class="text-right">
                                         <input class="hex-edit hex-edit-word" type="text" value={format!("{:08X}", reg_val)} 
-                                        onclick=|_|{ Msg::StartUpdate(format!("{:08X}", reg_val), RegUpdateType::Hex) }
-                                        oninput=|e|{ Msg::UpdateReg(e.value, reg_num, RegUpdateType::Hex) }
-                                        onkeypress=|e|{ if e.key() == "Enter" { Msg::FinishUpdate(RegUpdateType::Hex) } else { Msg::Nope } }
+                                        onclick=self.link.callback(move |_|{ Msg::StartUpdate(format!("{:08X}", reg_val), RegUpdateType::Hex) })
+                                        oninput=self.link.callback(move |e: InputData|{ Msg::UpdateReg(e.value, reg_num, RegUpdateType::Hex) })
+                                        onkeypress=self.link.callback(|e: KeyPressEvent|{ if e.key() == "Enter" { Msg::FinishUpdate(RegUpdateType::Hex) } else { Msg::Nope } })
                                         />
                                     </td>
                                     <td class="text-right">
                                         <input class="hex-edit hex-edit-word" type="text" value={format!("{}", reg_val)}
-                                        onclick=|_|{ Msg::StartUpdate(format!("{}", reg_val), RegUpdateType::Dec) }
-                                        oninput=|e|{ Msg::UpdateReg(e.value, reg_num, RegUpdateType::Dec) }
-                                        onkeypress=|e|{ if e.key() == "Enter" { Msg::FinishUpdate(RegUpdateType::Dec) } else { Msg::Nope } }
+                                        onclick=self.link.callback(move |_|{ Msg::StartUpdate(format!("{}", reg_val), RegUpdateType::Dec) })
+                                        oninput=self.link.callback(move |e: InputData|{ Msg::UpdateReg(e.value, reg_num, RegUpdateType::Dec) })
+                                        onkeypress=self.link.callback(|e: KeyPressEvent|{ if e.key() == "Enter" { Msg::FinishUpdate(RegUpdateType::Dec) } else { Msg::Nope } })
                                         />
                                     </td>
                                 </tr>
