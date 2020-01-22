@@ -6,10 +6,11 @@ use std::rc::Rc;
 use std::cell::RefCell;
 
 pub struct Status {
-    props: StatusProp
+    props: StatusProp,
+    link: ComponentLink<Self>
 }
 
-#[derive(Properties)]
+#[derive(Properties, Clone)]
 pub struct StatusProp {
     #[props(required)]
     pub gba: Rc<RefCell<GBA>>
@@ -24,9 +25,10 @@ impl Component for Status {
     type Message = Msg;
     type Properties = StatusProp;
 
-    fn create(props: Self::Properties, _: ComponentLink<Self>) -> Self {
+    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Status {
-            props: props
+            props: props,
+            link: link
         }
     }
 
@@ -46,10 +48,8 @@ impl Component for Status {
         self.props = props;
         true
     }
-}
 
-impl Renderable<Status> for Status {
-    fn view(&self) -> Html<Self> {
+    fn view(&self) -> Html {
         html! {
             <div>
                 <h4>{"Status"}</h4>
@@ -58,8 +58,8 @@ impl Renderable<Status> for Status {
                         {&format!("{:?}", self.props.gba.borrow().cpu.current_instruction_set)}
                     </button>
                     <div class="dropdown-menu">
-                        <button class="dropdown-item" type="button" onclick=|_|{Msg::UpdateInstructionSet(InstructionSet::Arm)}>{"Arm"}</button>
-                        <button class="dropdown-item" type="button" onclick=|_|{Msg::UpdateInstructionSet(InstructionSet::Thumb)}>{"Thumb"}</button>
+                        <button class="dropdown-item" type="button" onclick=self.link.callback(|_|{Msg::UpdateInstructionSet(InstructionSet::Arm)})>{"Arm"}</button>
+                        <button class="dropdown-item" type="button" onclick=self.link.callback(|_|{Msg::UpdateInstructionSet(InstructionSet::Thumb)})>{"Thumb"}</button>
                     </div>
                 </div>
                 <div class="dropdown m-2">
@@ -67,13 +67,13 @@ impl Renderable<Status> for Status {
                         {&format!("{:?}", self.props.gba.borrow().cpu.operating_mode)}
                     </button>
                     <div class="dropdown-menu">
-                        <button class="dropdown-item" type="button" onclick=|_|{Msg::UpdateOperatingMode(OperatingMode::System)}>{"System"}</button>
-                        <button class="dropdown-item" type="button" onclick=|_|{Msg::UpdateOperatingMode(OperatingMode::User)}>{"User"}</button>
-                        <button class="dropdown-item" type="button" onclick=|_|{Msg::UpdateOperatingMode(OperatingMode::FastInterrupt)}>{"Fast Interrupt"}</button>
-                        <button class="dropdown-item" type="button" onclick=|_|{Msg::UpdateOperatingMode(OperatingMode::Supervisor)}>{"Supervisor"}</button>
-                        <button class="dropdown-item" type="button" onclick=|_|{Msg::UpdateOperatingMode(OperatingMode::Abort)}>{"Abort"}</button>
-                        <button class="dropdown-item" type="button" onclick=|_|{Msg::UpdateOperatingMode(OperatingMode::Interrupt)}>{"Interrupt"}</button>
-                        <button class="dropdown-item" type="button" onclick=|_|{Msg::UpdateOperatingMode(OperatingMode::Undefined)}>{"Undefined"}</button>
+                        <button class="dropdown-item" type="button" onclick=self.link.callback(|_|{Msg::UpdateOperatingMode(OperatingMode::System)})>{"System"}</button>
+                        <button class="dropdown-item" type="button" onclick=self.link.callback(|_|{Msg::UpdateOperatingMode(OperatingMode::User)})>{"User"}</button>
+                        <button class="dropdown-item" type="button" onclick=self.link.callback(|_|{Msg::UpdateOperatingMode(OperatingMode::FastInterrupt)})>{"Fast Interrupt"}</button>
+                        <button class="dropdown-item" type="button" onclick=self.link.callback(|_|{Msg::UpdateOperatingMode(OperatingMode::Supervisor)})>{"Supervisor"}</button>
+                        <button class="dropdown-item" type="button" onclick=self.link.callback(|_|{Msg::UpdateOperatingMode(OperatingMode::Abort)})>{"Abort"}</button>
+                        <button class="dropdown-item" type="button" onclick=self.link.callback(|_|{Msg::UpdateOperatingMode(OperatingMode::Interrupt)})>{"Interrupt"}</button>
+                        <button class="dropdown-item" type="button" onclick=self.link.callback(|_|{Msg::UpdateOperatingMode(OperatingMode::Undefined)})>{"Undefined"}</button>
                     </div>
                 </div>
             </div>

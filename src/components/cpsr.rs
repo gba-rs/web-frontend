@@ -5,10 +5,11 @@ use std::rc::Rc;
 use std::cell::RefCell;
 
 pub struct Cpsr {
+    link: ComponentLink<Self>,
     props: CpsrProp
 }
 
-#[derive(Properties)]
+#[derive(Properties, Clone)]
 pub struct CpsrProp {
     #[props(required)]
     pub gba: Rc<RefCell<GBA>>
@@ -29,8 +30,9 @@ impl Component for Cpsr {
     type Message = Msg;
     type Properties = CpsrProp;
 
-    fn create(props: Self::Properties, _: ComponentLink<Self>) -> Self {
+    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Cpsr {
+            link: link,
             props: props
         }
     }
@@ -62,10 +64,8 @@ impl Component for Cpsr {
         self.props = props;
         true
     }
-}
 
-impl Renderable<Cpsr> for Cpsr {
-    fn view(&self) -> Html<Self> {
+    fn view(&self) -> Html {
         let flags = self.props.gba.borrow().cpu.cpsr.flags.clone();
 
         html! {
@@ -75,7 +75,7 @@ impl Renderable<Cpsr> for Cpsr {
                     <div class="input-group-prepend">
                         <span class="input-group-text cpsr-text">{&format!("Carry - {:?}", flags.carry)}</span>
                         <div class="input-group-text">
-                            <input type="checkbox" checked={flags.carry} onclick=|_|{Msg::UpdateFlag(UpdateFlagType::Carry)}/>
+                            <input type="checkbox" checked={flags.carry} onclick=self.link.callback(|_|{Msg::UpdateFlag(UpdateFlagType::Carry)})/>
                         </div>
                     </div>
                 </div>
@@ -84,7 +84,7 @@ impl Renderable<Cpsr> for Cpsr {
                     <div class="input-group-prepend">
                         <span class="input-group-text cpsr-text">{&format!("Negative - {:?}", flags.negative)}</span>
                         <div class="input-group-text">
-                            <input type="checkbox" checked={flags.negative} onclick=|_|{Msg::UpdateFlag(UpdateFlagType::Negative)}/>
+                            <input type="checkbox" checked={flags.negative} onclick=self.link.callback(|_|{Msg::UpdateFlag(UpdateFlagType::Negative)})/>
                         </div>
                     </div>
                 </div>
@@ -93,7 +93,7 @@ impl Renderable<Cpsr> for Cpsr {
                     <div class="input-group-prepend">
                         <span class="input-group-text cpsr-text">{&format!("Signed Overflow - {:?}", flags.signed_overflow)}</span>
                         <div class="input-group-text">
-                            <input type="checkbox" checked={flags.signed_overflow} onclick=|_|{Msg::UpdateFlag(UpdateFlagType::SignedOverflow)}/>
+                            <input type="checkbox" checked={flags.signed_overflow} onclick=self.link.callback(|_|{Msg::UpdateFlag(UpdateFlagType::SignedOverflow)})/>
                         </div>
                     </div>
                 </div>
@@ -102,7 +102,7 @@ impl Renderable<Cpsr> for Cpsr {
                     <div class="input-group-prepend">
                         <span class="input-group-text cpsr-text">{&format!("Zero - {:?}", flags.zero)}</span>
                         <div class="input-group-text">
-                            <input type="checkbox" checked={flags.zero} onclick=|_|{Msg::UpdateFlag(UpdateFlagType::Zero)}/>
+                            <input type="checkbox" checked={flags.zero} onclick=self.link.callback(|_|{Msg::UpdateFlag(UpdateFlagType::Zero)})/>
                         </div>
                     </div>
                 </div>

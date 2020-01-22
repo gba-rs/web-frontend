@@ -1,5 +1,5 @@
 use yew::prelude::*;
-use yew::{html, Component, ComponentLink, Html, ShouldRender};
+use yew::{html, Component, ComponentLink, InputData, KeyPressEvent, Html, ShouldRender};
 use gba_emulator::gba::GBA;
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -7,10 +7,11 @@ use log::{info};
 
 pub struct MemoryViewer {
     props: MemoryViewerProp,
-    hex_string: String
+    hex_string: String,
+    link: ComponentLink<Self>
 }
 
-#[derive(Properties)]
+#[derive(Properties, Clone)]
 pub struct MemoryViewerProp {
     #[props(required)]
     pub gba: Rc<RefCell<GBA>>,
@@ -33,8 +34,9 @@ impl Component for MemoryViewer {
     type Message = Msg;
     type Properties = MemoryViewerProp;
 
-    fn create(props: Self::Properties, _: ComponentLink<Self>) -> Self {
+    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         MemoryViewer {
+            link: link,
             props: props,
             hex_string: "".to_string()
         }
@@ -57,7 +59,7 @@ impl Component for MemoryViewer {
                         info!("Writing value {:X}", val);
                         self.props.gba.borrow_mut().mem_map.write_u8(address, val);
                     },
-                    Err(e) => {
+                    Err(_) => {
                         info!("Error parsing string:{}", self.hex_string);
                     }
                 }
@@ -71,10 +73,8 @@ impl Component for MemoryViewer {
         self.props = props;
         true
     }
-}
 
-impl Renderable<MemoryViewer> for MemoryViewer {
-    fn view(&self) -> Html<Self> {
+    fn view(&self) -> Html {
         if self.props.initialized {
             let bytes = self.props.gba.borrow().mem_map.read_block(self.props.min, self.props.max - self.props.min);
             html! {
@@ -90,9 +90,9 @@ impl Renderable<MemoryViewer> for MemoryViewer {
                                         let address = self.props.min + val as u32 + offset as u32;
                                         html! {
                                             <input type="text" class="hex-edit hex-edit-byte" value={format!(" {:02X}", byte)} 
-                                            onclick=|_|{ Msg::StartHexEdit(format!("{:X}", byte)) }
-                                            oninput=|e|{ Msg::UpdateHexString(e.value) } 
-                                            onkeypress=|e|{ if e.key() == "Enter" { Msg::WriteMemory(address) } else { Msg::Nope }}/>
+                                            onclick=self.link.callback(move |_|{ Msg::StartHexEdit(format!("{:X}", byte)) })
+                                            oninput=self.link.callback(move |e: InputData|{ Msg::UpdateHexString(e.value) })
+                                            onkeypress=self.link.callback(move |e: KeyPressEvent|{ if e.key() == "Enter" { Msg::WriteMemory(address) } else { Msg::Nope }})/>
                                         }
                                     } else {
                                         html! {

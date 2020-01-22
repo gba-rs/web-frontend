@@ -1,11 +1,11 @@
 use yew::prelude::*;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
-use yew::{html, Component, ComponentLink, Html, ShouldRender};
+use yew::{html, Component, ComponentLink, InputData, Html, ShouldRender};
 use gba_emulator::gba::GBA;
 use gba_emulator::cpu::{cpu::InstructionSet, cpu::ARM_PC, cpu::THUMB_PC};
 use std::rc::Rc;
 use std::cell::RefCell;
-use log::{info, SetLoggerError};
+use log::{info};
 
 use crate::components::{
     registers::Registers, 
@@ -17,15 +17,14 @@ use crate::components::{
 
 use crate::logging;
 
-pub const start_pc: u32 = 0x08000000;
-pub const follow_min: i64 = -10;
-pub const follow_max: i64 = 10;
+pub const START_PC: u32 = 0x08000000;
+pub const FOLLOW_MIN: i64 = -10;
+pub const FOLLOW_MAX: i64 = 10;
 
 struct DisassemblyElement {
     address: u32,
     instruction_hex: u32,
     instruction_asm: String,
-    selected: bool
 }
 
 pub struct App {
@@ -64,7 +63,6 @@ pub enum Msg {
     LoadedBios(FileData),
     Init,
     Step(u8),
-    ToggleHex,
     Files(Vec<File>, bool),
     ToggleFollow,
     UpdateRange(RangeUpdate),
@@ -80,7 +78,7 @@ impl Component for App {
             Ok(_) => {
                 info!("Logger initialized succesfully");
             },
-            Err(e) => {
+            Err(_) => {
                 info!("Logger failed to initialize");
             }
         }
@@ -126,7 +124,7 @@ impl Component for App {
                 true
             },
             Msg::Init => {
-                self.gba = Rc::new(RefCell::new(GBA::new(start_pc, &self.bios, &self.rom)));
+                self.gba = Rc::new(RefCell::new(GBA::new(START_PC, &self.bios, &self.rom)));
                 self.initialized = true;
                 info!("Created new Emulator");
 
@@ -147,10 +145,6 @@ impl Component for App {
 
                 true
             },
-            Msg::ToggleHex => {
-                self.hex = !self.hex;
-                true
-            },
             Msg::ToggleFollow => {
                 self.follow_pc = !self.follow_pc;
                 true
@@ -163,7 +157,7 @@ impl Component for App {
                             Ok(val) => {
                                 self.mem_max = val;
                             },
-                            Err(e) => {}
+                            Err(_) => {}
                         }
 
                         let result = u32::from_str_radix(&self.mem_min_str, 16);
@@ -171,7 +165,7 @@ impl Component for App {
                             Ok(val) => {
                                 self.mem_min = val;
                             },
-                            Err(e) => {}
+                            Err(_) => {}
                         }
                     },
                     RangeUpdate::DisassemblyMin | RangeUpdate::DisassemblyMax => {
@@ -180,7 +174,7 @@ impl Component for App {
                             Ok(val) => {
                                 self.dis_max = val;
                             },
-                            Err(e) => {}
+                            Err(_) => {}
                         }
 
                         let result = u32::from_str_radix(&self.dis_min_str, 16);
@@ -188,7 +182,7 @@ impl Component for App {
                             Ok(val) => {
                                 self.dis_min = val;
                             },
-                            Err(e) => {}
+                            Err(_) => {}
                         }
 
                         if !self.follow_pc {
@@ -221,10 +215,10 @@ impl Component for App {
                 for file in files.into_iter() {
                     let task = {
                         if rom {
-                            let callback = self.link.send_back(Msg::LoadedRom);
+                            let callback = self.link.callback(Msg::LoadedRom);
                             self.reader.read_file(file, callback)
                         } else {
-                            let callback = self.link.send_back(Msg::LoadedBios);
+                            let callback = self.link.callback(Msg::LoadedBios);
                             self.reader.read_file(file, callback)
                         }
                     };
@@ -234,10 +228,8 @@ impl Component for App {
             }
         }
     }
-}
 
-impl Renderable<App> for App {
-    fn view(&self) -> Html<Self> {
+    fn view(&self) -> Html {
         html! {
             <>
                 <NavBar/>
@@ -282,7 +274,7 @@ impl Renderable<App> for App {
 }
 
 impl App {
-    pub fn view_disassembly(&self) -> Html<Self> {
+    pub fn view_disassembly(&self) -> Html {
         let instruction_set = self.gba.borrow().cpu.current_instruction_set;
         let current_pc_num = if instruction_set == InstructionSet::Arm { ARM_PC } else { THUMB_PC };
 
@@ -311,7 +303,7 @@ impl App {
         }
     }
 
-    pub fn view_range_dis(&self) -> Html<Self> {
+    pub fn view_range_dis(&self) -> Html {
         html! {
             <>
                 <h5>{"Disassembly"}</h5>
@@ -319,28 +311,28 @@ impl App {
                     <div class="input-group-prepend">
                         <span class="input-group-text" id="lower-addon-dis">{"Lower"}</span>
                     </div>
-                    <input type="text" class="form-control" placeholder="0" oninput=|e| {Msg::UpdateInputString(e.value, RangeUpdate::DisassemblyMin)}/>
+                    <input type="text" class="form-control" placeholder="0" oninput=self.link.callback(|e: InputData| {Msg::UpdateInputString(e.value, RangeUpdate::DisassemblyMin)})/>
                 </div>
                 <div class="input-group input-group-sm mb-3">
                     <div class="input-group-prepend">
                         <span class="input-group-text" id="upper-addon-dis">{"Upper"}</span>
                     </div>
-                    <input type="text" class="form-control" placeholder="100" oninput=|e| {Msg::UpdateInputString(e.value, RangeUpdate::DisassemblyMax)}/>
+                    <input type="text" class="form-control" placeholder="100" oninput=self.link.callback(|e: InputData| {Msg::UpdateInputString(e.value, RangeUpdate::DisassemblyMax)})/>
                 </div>
                 <div class="input-group input-group-sm mb-3">
                     <div class="input-group-prepend">
                         <span class="input-group-text" id="follow-addon">{"Follow PC"}</span>
                         <div class="input-group-text">
-                            <input type="checkbox" checked={self.follow_pc} onclick=|_|{Msg::ToggleFollow}/>
+                            <input type="checkbox" checked={self.follow_pc} onclick=self.link.callback(|_|{Msg::ToggleFollow})/>
                         </div>                                
                     </div>
                 </div>
-                <button class="btn btn-outline-primary" onclick=|_|{Msg::UpdateRange(RangeUpdate::DisassemblyMax)}>{"Search"}</button>
+                <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::UpdateRange(RangeUpdate::DisassemblyMax)})>{"Search"}</button>
             </>
         }
     }
 
-    pub fn view_range_mem(&self) -> Html<Self> {
+    pub fn view_range_mem(&self) -> Html {
         html!{
             <>
                 <h5>{"Memory"}</h5>
@@ -348,20 +340,20 @@ impl App {
                     <div class="input-group-prepend">
                         <span class="input-group-text" id="lower-addon-mem">{"Lower"}</span>
                     </div>
-                    <input type="text" class="form-control" placeholder="0" oninput=|e| {Msg::UpdateInputString(e.value, RangeUpdate::MemoryViewerMin)}/>
+                    <input type="text" class="form-control" placeholder="0" oninput=self.link.callback(|e: InputData| {Msg::UpdateInputString(e.value, RangeUpdate::MemoryViewerMin)})/>
                 </div>
                 <div class="input-group input-group-sm mb-3">
                     <div class="input-group-prepend">
                         <span class="input-group-text" id="upper-addon-mem">{"Upper"}</span>
                     </div>
-                    <input type="text" class="form-control" placeholder="100" oninput=|e| {Msg::UpdateInputString(e.value, RangeUpdate::MemoryViewerMax)}/>
+                    <input type="text" class="form-control" placeholder="100" oninput=self.link.callback(|e: InputData| {Msg::UpdateInputString(e.value, RangeUpdate::MemoryViewerMax)})/>
                 </div>
-                <button class="btn btn-outline-primary" onclick=|_|{Msg::UpdateRange(RangeUpdate::MemoryViewerMax)}>{"Search"}</button>
+                <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::UpdateRange(RangeUpdate::MemoryViewerMax)})>{"Search"}</button>
             </>
         }
     }
 
-    pub fn view_control(&self) -> Html<Self> {
+    pub fn view_control(&self) -> Html {
         html! {
             <>
                 // <h4>{"Control"}</h4>
@@ -371,13 +363,13 @@ impl App {
                             <span class="input-group-text" id="inputGroupFileAddon01">{"Bios"}</span>
                         </div>
                         <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="inputGroupFile01" aria-describedby="inputGroupFileAddon01" onchange=|value| {
+                            <input type="file" class="custom-file-input" id="inputGroupFile01" aria-describedby="inputGroupFileAddon01" onchange=self.link.callback(move |value| {
                                 let mut result = Vec::new();
                                 if let ChangeData::Files(files) = value {
                                     result.extend(files);
                                 }
                                 Msg::Files(result, false)
-                            }/>
+                            })/>
                             <label class="custom-file-label" for="inputGroupFile01">{format!("{}", self.bios_name)}</label>
                         </div>
                     </div>
@@ -389,13 +381,13 @@ impl App {
                             <span class="input-group-text" id="inputGroupFileAddon02">{"Rom"}</span>
                         </div>
                         <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="inputGroupFile02" aria-describedby="inputGroupFileAddon02" onchange=|value| {
+                            <input type="file" class="custom-file-input" id="inputGroupFile02" aria-describedby="inputGroupFileAddon02" onchange=self.link.callback(|value| {
                                 let mut result = Vec::new();
                                 if let ChangeData::Files(files) = value {
                                     result.extend(files);
                                 }
                                 Msg::Files(result, true)
-                            }/>
+                            })/>
                             <label class="custom-file-label" for="inputGroupFile02">{format!("{}", self.rom_name)}</label>
                         </div>
                     </div>
@@ -403,8 +395,8 @@ impl App {
             
                 <div class="col-xs-12 col-xl-6 sticky-top">
                     <div class="btn-group" role="group">
-                        <button class="btn btn-outline-primary" onclick=|_|{Msg::Init}>{"Init Emulator"}</button>
-                        <button class="btn btn-outline-primary" onclick=|_|{Msg::Step(1)}>{"Step"}</button>
+                        <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Init})>{"Init Emulator"}</button>
+                        <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Step(1)})>{"Step"}</button>
                     </div>
                 </div>
                 
@@ -420,8 +412,8 @@ impl App {
         let current_pc = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
         let current_instruction_size = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { 4 } else { 2 };
         
-        let mut address = current_pc as i64 + (follow_min * current_instruction_size);
-        let total_bytes = (follow_max * current_instruction_size - follow_min * current_instruction_size) as u32;
+        let mut address = current_pc as i64 + (FOLLOW_MIN * current_instruction_size);
+        let total_bytes = (FOLLOW_MAX * current_instruction_size - FOLLOW_MIN * current_instruction_size) as u32;
 
         if address < 0 {
             address = 0;
@@ -447,15 +439,13 @@ impl App {
                                 address: (i as u32) + address,
                                 instruction_hex: instruction,
                                 instruction_asm: decoded_instruction.asm(),
-                                selected: ((i as u32) + address) == self.gba.borrow().cpu.get_register(ARM_PC)
                             });
                         },
-                        Err(e) => {
+                        Err(_) => {
                             self.disassembly.push(DisassemblyElement {
                                 address: (i as u32) + address,
                                 instruction_hex: instruction,
                                 instruction_asm: "???".to_string(),
-                                selected: ((i as u32) + address) == self.gba.borrow().cpu.get_register(ARM_PC)
                             });
                         }
                     }
@@ -474,15 +464,13 @@ impl App {
                                 address: (i as u32) + address,
                                 instruction_hex: instruction as u32,
                                 instruction_asm: decoded_instruction.asm(),
-                                selected: ((i as u32) + address) == self.gba.borrow().cpu.get_register(THUMB_PC)
                             });
                         },
-                        Err(e) => {
+                        Err(_) => {
                             self.disassembly.push(DisassemblyElement {
                                 address: (i as u32) + address,
                                 instruction_hex: instruction as u32,
                                 instruction_asm: "???".to_string(),
-                                selected: ((i as u32) + address) == self.gba.borrow().cpu.get_register(THUMB_PC)
                             });
                         }
                     }
