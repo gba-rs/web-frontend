@@ -141,7 +141,7 @@ impl Component for App {
             },
             Msg::Step(step_count) => {
                 for _ in 0..step_count {
-                    self.gba.as_ref().borrow_mut().step();
+                    self.gba.as_ref().borrow_mut().single_step();
                 }
 
                 if self.follow_pc {
@@ -168,7 +168,7 @@ impl Component for App {
                 false
             }
             Msg::Run(address) => {
-                self.gba.borrow_mut().step();
+                self.gba.borrow_mut().single_step();
                 let current_pc = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
                 if current_pc != address {
                     self.link.send_message(Msg::Run(address));
@@ -464,7 +464,7 @@ impl App {
     }
 
     fn disassemble(&mut self, address: u32, total_bytes: u32) {
-        let memory_block = self.gba.borrow().mem_map.read_block(address as u32, total_bytes);
+        let memory_block = self.gba.borrow().memory_bus.mem_map.read_block(address as u32, total_bytes);
         match self.gba.borrow().cpu.current_instruction_set {
             InstructionSet::Arm => {
                 for i in (0..memory_block.len()).step_by(4) {

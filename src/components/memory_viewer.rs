@@ -57,7 +57,7 @@ impl Component for MemoryViewer {
                 match u8::from_str_radix(&self.hex_string, 16) {
                     Ok(val) => {
                         info!("Writing value {:X}", val);
-                        self.props.gba.borrow_mut().mem_map.write_u8(address, val);
+                        self.props.gba.borrow_mut().memory_bus.mem_map.write_u8(address, val);
                     },
                     Err(_) => {
                         info!("Error parsing string:{}", self.hex_string);
@@ -76,7 +76,7 @@ impl Component for MemoryViewer {
 
     fn view(&self) -> Html {
         if self.props.initialized {
-            let bytes = self.props.gba.borrow().mem_map.read_block(self.props.min, self.props.max - self.props.min);
+            let bytes = self.props.gba.borrow().memory_bus.mem_map.read_block(self.props.min, self.props.max - self.props.min);
             html! {
                 <div class="code-block">
                     {for (0..bytes.len()).step_by(16).map(|val|{
