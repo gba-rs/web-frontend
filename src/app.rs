@@ -5,7 +5,7 @@ use gba_emulator::gba::GBA;
 use gba_emulator::cpu::{cpu::InstructionSet, cpu::ARM_PC, cpu::THUMB_PC};
 use std::rc::Rc;
 use std::cell::RefCell;
-use log::{info};
+use log::{info, error};
 
 use crate::components::{
     registers::Registers, 
@@ -48,7 +48,8 @@ pub struct App {
     dis_min_str: String,
     dis_max_str: String,
     mem_min_str: String,
-    mem_max_str: String
+    mem_max_str: String,
+    run_addr_str: String
 }
 
 pub enum RangeUpdate{
@@ -63,10 +64,13 @@ pub enum Msg {
     LoadedBios(FileData),
     Init,
     Step(u8),
+    Run(u32),
     Files(Vec<File>, bool),
     ToggleFollow,
     UpdateRange(RangeUpdate),
-    UpdateInputString(String, RangeUpdate)
+    UpdateInputString(String, RangeUpdate),
+    UpdateRunString(String),
+    StartRun,
 }
 
 impl Component for App {
@@ -104,7 +108,8 @@ impl Component for App {
             dis_min_str: "".to_string(),
             dis_max_str: "".to_string(),
             mem_min_str: "".to_string(),
-            mem_max_str: "".to_string()
+            mem_max_str: "".to_string(),
+            run_addr_str: "".to_string()
         }
     }
 
@@ -136,13 +141,43 @@ impl Component for App {
             },
             Msg::Step(step_count) => {
                 for _ in 0..step_count {
-                    self.gba.as_ref().borrow_mut().step();
+                    self.gba.as_ref().borrow_mut().single_step();
                 }
 
                 if self.follow_pc {
                     self.follow_pc_disassemble();
                 }
 
+                true
+            },
+            Msg::UpdateRunString(value) => {
+                self.run_addr_str = value;
+                false
+            },
+            Msg::StartRun => {
+                let result = u32::from_str_radix(&self.run_addr_str, 16);//self.mem_max_str.parse::<u32>();
+                match result {
+                    Ok(val) => {
+                        self.link.send_message(Msg::Run(val));
+                    },
+                    Err(_) => {
+                        error!("Error parsing run address");
+                    }
+                }
+
+                false
+            }
+            Msg::Run(address) => {
+                self.gba.borrow_mut().single_step();
+                let current_pc = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
+                if current_pc != address {
+                    self.link.send_message(Msg::Run(address));
+                }
+
+                if self.follow_pc {
+                    self.follow_pc_disassemble();
+                }
+                
                 true
             },
             Msg::ToggleFollow => {
@@ -393,15 +428,21 @@ impl App {
                     </div>
                 </div>
             
-                <div class="col-xs-12 col-xl-6 sticky-top">
+                <div class="col-xs-12 col-xl-3 sticky-top">
                     <div class="btn-group" role="group">
                         <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Init})>{"Init Emulator"}</button>
                         <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Step(1)})>{"Step"}</button>
                     </div>
                 </div>
-                
-                // <Status gba={self.gba.clone()}/>
-                // <Cpsr gba={self.gba.clone()}/>
+
+                <div class="col-xs-12 col-xl-3 sticky-top">
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <button class="btn btn-outline-primary" type="button" onclick=self.link.callback(|_|{Msg::StartRun})>{"Run"}</button>
+                        </div>
+                        <input type="text" class="form-control" placeholder="080000D4" oninput=self.link.callback(|e: InputData| {Msg::UpdateRunString(e.value)})/>
+                    </div>
+                </div>
             </>
         }
     }
@@ -423,7 +464,7 @@ impl App {
     }
 
     fn disassemble(&mut self, address: u32, total_bytes: u32) {
-        let memory_block = self.gba.borrow().mem_map.read_block(address as u32, total_bytes);
+        let memory_block = self.gba.borrow().memory_bus.mem_map.read_block(address as u32, total_bytes);
         match self.gba.borrow().cpu.current_instruction_set {
             InstructionSet::Arm => {
                 for i in (0..memory_block.len()).step_by(4) {
