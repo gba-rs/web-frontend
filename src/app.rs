@@ -273,16 +273,25 @@ impl Component for App {
                         {self.view_control()}
                     </div>
                     <div class="row">
+                         <div class="col-xs-12 col-lg-6 col-xl-6">
+                             <ul class="nav nav-tabs">
+                               <li class="nav-item"><a class="nav-link active" href="#">{"Menu"}</a></li>
+                               <li class="nav-item"><a class="nav-link" href="#">{"IO"}</a></li>
+                               <li class="nav-item"><a class="nav-link" href="#">{"Menu"}</a></li>
+                               <li class="nav-item"><a class="nav-link" href="#">{"Menu"}</a></li>
+                             </ul>
+                             <div class="row">
+                                 <div class="col-xs-12 col-lg-6 col-xl-6">
+                                    <Status gba={self.gba.clone()}/>
+                                    <Cpsr gba={self.gba.clone()}/>
+                                </div>
 
-                         <div class="col-xs-12 col-lg-6 col-xl-3">
-                            <Status gba={self.gba.clone()}/>
-                            <Cpsr gba={self.gba.clone()}/>
-                        </div>
-                        
-                        <div class="col-xs-12 col-lg-6 col-xl-3">
-                            <Registers hex={self.hex} gba={self.gba.clone()}/>
-                        </div>
-                    
+                                <div class="col-xs-12 col-lg-6 col-xl-6">
+                                    <Registers hex={self.hex} gba={self.gba.clone()}/>
+                                </div>
+                             </div>
+                         </div>
+
                         <div class="col-xs-12 col-xl-6">
                             <div class="row">
                                 <div class="col-3">
