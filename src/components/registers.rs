@@ -122,8 +122,8 @@ impl Component for Registers {
                         </tr>
                     </thead>
                     <tbody>
-                        {for (0..if self.props.gba.borrow().cpu.get_instruction_set() == InstructionSet::Arm { 16 } else { 11 }).map(|val|{
-                            let reg_val = self.props.gba.borrow().cpu.get_register(val);
+                        {for (0..16).map(|val|{
+                            let reg_val = self.props.gba.borrow().cpu.get_register_unsafe(val);
                             let reg_num = val;
                             html! {
                                 <tr>
