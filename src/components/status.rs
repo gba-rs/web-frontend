@@ -35,10 +35,10 @@ impl Component for Status {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::UpdateInstructionSet(instr_set) => {
-                self.props.gba.borrow_mut().cpu.current_instruction_set = instr_set;
+                self.props.gba.borrow_mut().cpu.set_instruction_set(instr_set);
             },
             Msg::UpdateOperatingMode(op_mode) => {
-                self.props.gba.borrow_mut().cpu.operating_mode = op_mode;
+                self.props.gba.borrow_mut().cpu.set_operating_mode(op_mode);
             }
         }
         true
@@ -55,7 +55,7 @@ impl Component for Status {
                 <h4>{"Status"}</h4>
                 <div class="dropdown m-2">
                     <button class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown">
-                        {&format!("{:?}", self.props.gba.borrow().cpu.current_instruction_set)}
+                        {&format!("{:?}", self.props.gba.borrow().cpu.get_instruction_set())}
                     </button>
                     <div class="dropdown-menu">
                         <button class="dropdown-item" type="button" onclick=self.link.callback(|_|{Msg::UpdateInstructionSet(InstructionSet::Arm)})>{"Arm"}</button>
@@ -64,7 +64,7 @@ impl Component for Status {
                 </div>
                 <div class="dropdown m-2">
                     <button class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown">
-                        {&format!("{:?}", self.props.gba.borrow().cpu.operating_mode)}
+                        {&format!("{:?}", self.props.gba.borrow().cpu.get_operating_mode())}
                     </button>
                     <div class="dropdown-menu">
                         <button class="dropdown-item" type="button" onclick=self.link.callback(|_|{Msg::UpdateOperatingMode(OperatingMode::System)})>{"System"}</button>

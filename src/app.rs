@@ -49,7 +49,8 @@ pub struct App {
     dis_max_str: String,
     mem_min_str: String,
     mem_max_str: String,
-    run_addr_str: String
+    run_addr_str: String,
+    break_points: Vec<u32>
 }
 
 pub enum RangeUpdate{
@@ -71,6 +72,7 @@ pub enum Msg {
     UpdateInputString(String, RangeUpdate),
     UpdateRunString(String),
     StartRun,
+    UpdateBreakPoint(u32, bool)
 }
 
 impl Component for App {
@@ -109,7 +111,8 @@ impl Component for App {
             dis_max_str: "".to_string(),
             mem_min_str: "".to_string(),
             mem_max_str: "".to_string(),
-            run_addr_str: "".to_string()
+            run_addr_str: "".to_string(),
+            break_points: vec![]
         }
     }
 
@@ -168,10 +171,14 @@ impl Component for App {
                 false
             }
             Msg::Run(address) => {
-                self.gba.borrow_mut().single_step();
-                let current_pc = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
-                if current_pc != address {
-                    self.link.send_message(Msg::Run(address));
+                // self.gba.borrow_mut().single_step();
+                let mut current_pc = if self.gba.borrow().cpu.get_instruction_set() == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
+
+                while current_pc != address {
+                // while !self.break_points.contains(current_pc);
+                    self.gba.borrow_mut().key_status.set_register(0x3FF); // Change this to get the keys down
+                    self.gba.borrow_mut().single_step();
+                    current_pc = if self.gba.borrow().cpu.get_instruction_set() == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
                 }
 
                 if self.follow_pc {
@@ -179,6 +186,15 @@ impl Component for App {
                 }
                 
                 true
+            },
+            Msg::UpdateBreakPoint(address, remove) => {
+                if self.break_points.contains(&address) && remove {
+                    let index = self.break_points.iter().position(|x| *x == address).unwrap();
+                    self.break_points.remove(index);
+                } else if !remove {
+                    self.break_points.push(address);
+                }
+                false
             },
             Msg::ToggleFollow => {
                 self.follow_pc = !self.follow_pc;
@@ -310,7 +326,7 @@ impl Component for App {
 
 impl App {
     pub fn view_disassembly(&self) -> Html {
-        let instruction_set = self.gba.borrow().cpu.current_instruction_set;
+        let instruction_set = self.gba.borrow().cpu.get_instruction_set();
         let current_pc_num = if instruction_set == InstructionSet::Arm { ARM_PC } else { THUMB_PC };
 
         if self.disassembled {
@@ -323,6 +339,7 @@ impl App {
 
                         html! {
                             <div class={if self.disassembly[val as usize].address == current_pc {"disassembly-selected"} else {""}}>
+                                // <input type="checkbox" onclick=self.link.callback(|e|{ log::debug!("{:?}", e); Msg::Step(1)})/>
                                 <span class="disassembly-address">{format!("{:08X}", element.address)}</span>
                                 <span class="disassembly-hex">{format!("{:08X}", element.instruction_hex)}</span>
                                 <span class="disassembly-asm">{format!("{}", element.instruction_asm)}</span>
@@ -450,8 +467,8 @@ impl App {
     fn follow_pc_disassemble(&mut self) {
         // Update the disassembly with the given pc follow range
         self.disassembly.clear();
-        let current_pc = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
-        let current_instruction_size = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { 4 } else { 2 };
+        let current_pc = if self.gba.borrow().cpu.get_instruction_set() == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
+        let current_instruction_size = if self.gba.borrow().cpu.get_instruction_set() == InstructionSet::Arm { 4 } else { 2 };
         
         let mut address = current_pc as i64 + (FOLLOW_MIN * current_instruction_size);
         let total_bytes = (FOLLOW_MAX * current_instruction_size - FOLLOW_MIN * current_instruction_size) as u32;
@@ -465,7 +482,7 @@ impl App {
 
     fn disassemble(&mut self, address: u32, total_bytes: u32) {
         let memory_block = self.gba.borrow().memory_bus.mem_map.read_block(address as u32, total_bytes);
-        match self.gba.borrow().cpu.current_instruction_set {
+        match self.gba.borrow().cpu.get_instruction_set() {
             InstructionSet::Arm => {
                 for i in (0..memory_block.len()).step_by(4) {
                     let instruction: u32 = memory_block[i] as u32 | 
