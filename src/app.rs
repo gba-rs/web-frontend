@@ -8,11 +8,11 @@ use std::cell::RefCell;
 use log::{info, error};
 
 use crate::components::{
-    registers::Registers, 
-    navbar::NavBar, 
+    registers::Registers,
+    navbar::NavBar,
     cpsr::Cpsr,
     status::Status,
-    memory_viewer::MemoryViewer
+    memory_viewer::MemoryViewer,
 };
 
 use crate::logging;
@@ -49,14 +49,15 @@ pub struct App {
     dis_max_str: String,
     mem_min_str: String,
     mem_max_str: String,
-    run_addr_str: String
+    run_addr_str: String,
+    active_menu: ActiveMenu,
 }
 
-pub enum RangeUpdate{
+pub enum RangeUpdate {
     MemoryViewerMin,
     MemoryViewerMax,
     DisassemblyMin,
-    DisassemblyMax
+    DisassemblyMax,
 }
 
 pub enum Msg {
@@ -67,10 +68,17 @@ pub enum Msg {
     Run(u32),
     Files(Vec<File>, bool),
     ToggleFollow,
+    ToggleMenu(ActiveMenu),
     UpdateRange(RangeUpdate),
     UpdateInputString(String, RangeUpdate),
     UpdateRunString(String),
     StartRun,
+}
+
+#[derive(PartialEq)]
+pub enum ActiveMenu {
+    Registers,
+    IO,
 }
 
 impl Component for App {
@@ -81,7 +89,7 @@ impl Component for App {
         match logging::init_logger() {
             Ok(_) => {
                 info!("Logger initialized succesfully");
-            },
+            }
             Err(_) => {
                 info!("Logger failed to initialize");
             }
@@ -109,7 +117,8 @@ impl Component for App {
             dis_max_str: "".to_string(),
             mem_min_str: "".to_string(),
             mem_max_str: "".to_string(),
-            run_addr_str: "".to_string()
+            run_addr_str: "".to_string(),
+            active_menu: ActiveMenu::Registers,
         }
     }
 
@@ -121,13 +130,13 @@ impl Component for App {
                 self.disassembled = false;
                 self.initialized = false;
                 true
-            },
+            }
             Msg::LoadedBios(file) => {
                 self.bios = file.content;
                 self.bios_name = file.name;
                 self.initialized = false;
                 true
-            },
+            }
             Msg::Init => {
                 self.gba = Rc::new(RefCell::new(GBA::new(START_PC, &self.bios, &self.rom)));
                 self.initialized = true;
@@ -138,7 +147,7 @@ impl Component for App {
                 }
 
                 true
-            },
+            }
             Msg::Step(step_count) => {
                 for _ in 0..step_count {
                     self.gba.as_ref().borrow_mut().single_step();
@@ -149,17 +158,17 @@ impl Component for App {
                 }
 
                 true
-            },
+            }
             Msg::UpdateRunString(value) => {
                 self.run_addr_str = value;
                 false
-            },
+            }
             Msg::StartRun => {
                 let result = u32::from_str_radix(&self.run_addr_str, 16);//self.mem_max_str.parse::<u32>();
                 match result {
                     Ok(val) => {
                         self.link.send_message(Msg::Run(val));
-                    },
+                    }
                     Err(_) => {
                         error!("Error parsing run address");
                     }
@@ -177,13 +186,13 @@ impl Component for App {
                 if self.follow_pc {
                     self.follow_pc_disassemble();
                 }
-                
+
                 true
-            },
+            }
             Msg::ToggleFollow => {
                 self.follow_pc = !self.follow_pc;
                 true
-            },
+            }
             Msg::UpdateRange(range_to_update) => {
                 match range_to_update {
                     RangeUpdate::MemoryViewerMin | RangeUpdate::MemoryViewerMax => {
@@ -191,7 +200,7 @@ impl Component for App {
                         match result {
                             Ok(val) => {
                                 self.mem_max = val;
-                            },
+                            }
                             Err(_) => {}
                         }
 
@@ -199,16 +208,16 @@ impl Component for App {
                         match result {
                             Ok(val) => {
                                 self.mem_min = val;
-                            },
+                            }
                             Err(_) => {}
                         }
-                    },
+                    }
                     RangeUpdate::DisassemblyMin | RangeUpdate::DisassemblyMax => {
                         let result = u32::from_str_radix(&self.dis_max_str, 16);
                         match result {
                             Ok(val) => {
                                 self.dis_max = val;
-                            },
+                            }
                             Err(_) => {}
                         }
 
@@ -216,36 +225,36 @@ impl Component for App {
                         match result {
                             Ok(val) => {
                                 self.dis_min = val;
-                            },
+                            }
                             Err(_) => {}
                         }
 
                         if !self.follow_pc {
-                            self.disassembly.clear();                    
+                            self.disassembly.clear();
                             let total_bytes = (self.dis_max as i64 - self.dis_min as i64) as u32;
                             self.disassemble(self.dis_min, total_bytes);
                         }
                     }
                 }
                 true
-            },
+            }
             Msg::UpdateInputString(val, range_to_update) => {
                 match range_to_update {
                     RangeUpdate::MemoryViewerMin => {
                         self.mem_min_str = val;
-                    },
+                    }
                     RangeUpdate::MemoryViewerMax => {
                         self.mem_max_str = val;
-                    },
+                    }
                     RangeUpdate::DisassemblyMin => {
                         self.dis_min_str = val;
-                    },
+                    }
                     RangeUpdate::DisassemblyMax => {
                         self.dis_max_str = val;
                     }
                 }
                 false
-            },
+            }
             Msg::Files(files, rom) => {
                 for file in files.into_iter() {
                     let task = {
@@ -261,6 +270,10 @@ impl Component for App {
                 }
                 false
             }
+            Msg::ToggleMenu(menu_item) => {
+                self.active_menu = menu_item;
+                true
+            }
         }
     }
 
@@ -275,12 +288,10 @@ impl Component for App {
                     <div class="row">
                          <div class="col-xs-12 col-lg-6 col-xl-6">
                              <ul class="nav nav-tabs">
-                               <li class="nav-item"><a class="nav-link active" href="#">{"Menu"}</a></li>
-                               <li class="nav-item"><a class="nav-link" href="#">{"IO"}</a></li>
-                               <li class="nav-item"><a class="nav-link" href="#">{"Menu"}</a></li>
-                               <li class="nav-item"><a class="nav-link" href="#">{"Menu"}</a></li>
+                               <li class="nav-item"><a class={format!("nav-link {}",self.is_menu_tab_active(ActiveMenu::Registers))} href="#" onclick=self.link.callback(|_|{Msg::ToggleMenu(ActiveMenu::Registers)})>{"Registers/Status"}</a></li>
+                               <li class="nav-item"><a class={format!("nav-link {}",self.is_menu_tab_active(ActiveMenu::IO))} href="#" onclick=self.link.callback(|_|{Msg::ToggleMenu(ActiveMenu::IO)})>{"IO Registers"}</a></li>
                              </ul>
-                             <div class="row">
+                             <div class={format!("row {}", self.is_menu_body_active(ActiveMenu::Registers))}>
                                  <div class="col-xs-12 col-lg-6 col-xl-6">
                                     <Status gba={self.gba.clone()}/>
                                     <Cpsr gba={self.gba.clone()}/>
@@ -289,6 +300,8 @@ impl Component for App {
                                 <div class="col-xs-12 col-lg-6 col-xl-6">
                                     <Registers hex={self.hex} gba={self.gba.clone()}/>
                                 </div>
+                             </div>
+                             <div class={format!("row {}", self.is_menu_body_active(ActiveMenu::IO))}>
                              </div>
                          </div>
 
@@ -377,7 +390,7 @@ impl App {
     }
 
     pub fn view_range_mem(&self) -> Html {
-        html!{
+        html! {
             <>
                 <h5>{"Memory"}</h5>
                 <div class="input-group input-group-sm mb-3">
@@ -456,12 +469,27 @@ impl App {
         }
     }
 
+    pub fn is_menu_tab_active(&self, menu_item: ActiveMenu) -> String {
+        if menu_item == self.active_menu {
+            return format!("active");
+        }
+        return format!("");
+    }
+
+    pub fn is_menu_body_active(&self, menu_item: ActiveMenu) -> String {
+        if menu_item != self.active_menu {
+            return format!("d-none");
+        }
+        return format!("");
+    }
+
+
     fn follow_pc_disassemble(&mut self) {
         // Update the disassembly with the given pc follow range
         self.disassembly.clear();
         let current_pc = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
         let current_instruction_size = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { 4 } else { 2 };
-        
+
         let mut address = current_pc as i64 + (FOLLOW_MIN * current_instruction_size);
         let total_bytes = (FOLLOW_MAX * current_instruction_size - FOLLOW_MIN * current_instruction_size) as u32;
 
@@ -477,20 +505,20 @@ impl App {
         match self.gba.borrow().cpu.current_instruction_set {
             InstructionSet::Arm => {
                 for i in (0..memory_block.len()).step_by(4) {
-                    let instruction: u32 = memory_block[i] as u32 | 
-                    ((memory_block[i as usize + 1] as u32) << 8) | 
-                    ((memory_block[i as usize + 2] as u32) << 16) | 
-                    ((memory_block[i as usize + 3] as u32) << 24);
+                    let instruction: u32 = memory_block[i] as u32 |
+                        ((memory_block[i as usize + 1] as u32) << 8) |
+                        ((memory_block[i as usize + 2] as u32) << 16) |
+                        ((memory_block[i as usize + 3] as u32) << 24);
 
                     let decode_result = self.gba.borrow().cpu.decode(instruction);
                     match decode_result {
                         Ok(decoded_instruction) => {
-                            self.disassembly.push(DisassemblyElement{
+                            self.disassembly.push(DisassemblyElement {
                                 address: (i as u32) + address,
                                 instruction_hex: instruction,
                                 instruction_asm: decoded_instruction.asm(),
                             });
-                        },
+                        }
                         Err(_) => {
                             self.disassembly.push(DisassemblyElement {
                                 address: (i as u32) + address,
@@ -502,7 +530,7 @@ impl App {
                 }
 
                 self.disassembled = true;
-            },
+            }
             InstructionSet::Thumb => {
                 for i in (0..memory_block.len()).step_by(2) {
                     let instruction: u16 = memory_block[i] as u16 | ((memory_block[i as usize + 1] as u16) << 8);
@@ -510,12 +538,12 @@ impl App {
                     let decode_result = self.gba.borrow().cpu.decode(instruction as u32);
                     match decode_result {
                         Ok(decoded_instruction) => {
-                            self.disassembly.push(DisassemblyElement{
+                            self.disassembly.push(DisassemblyElement {
                                 address: (i as u32) + address,
                                 instruction_hex: instruction as u32,
                                 instruction_asm: decoded_instruction.asm(),
                             });
-                        },
+                        }
                         Err(_) => {
                             self.disassembly.push(DisassemblyElement {
                                 address: (i as u32) + address,
