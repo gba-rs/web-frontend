@@ -13,6 +13,7 @@ use crate::components::{
     cpsr::Cpsr,
     status::Status,
     memory_viewer::MemoryViewer,
+    io_reg::IORegisters
 };
 
 use crate::logging;
@@ -302,6 +303,9 @@ impl Component for App {
                                 </div>
                              </div>
                              <div class={format!("row {}", self.is_menu_body_active(ActiveMenu::IO))}>
+                                <div class="col-xs-12 col-lg-12 col-xl-12">
+                                    <IORegisters hex={self.hex} gba={self.gba.clone()}/>
+                                </div>
                              </div>
                          </div>
 
