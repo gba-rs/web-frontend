@@ -8,7 +8,7 @@ use log::{info};
 use crate::components::registers::{RegistersProp, RegUpdateType};
 
 pub struct IORegisters {
-    props: RegistersProp,
+    pub props: RegistersProp,
     updated_reg_hex: String,
     updated_reg_dec: String,
     update_reg_num: u8,
@@ -174,7 +174,7 @@ impl Component for IORegisters {
 
                 <div id="collapseOne" class="collapse show" aria-labelledby="headingOne">
                   <div class="card-body">
-                      {"LCD REGISTERS"}
+                      {self.view_lcd()}
                   </div>
                 </div>
               </div>
