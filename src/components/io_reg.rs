@@ -6,6 +6,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use log::{info};
 use crate::components::registers::{RegistersProp, RegUpdateType};
+use crate::components::io::lcd::LCD;
 
 pub struct IORegisters {
     pub props: RegistersProp,

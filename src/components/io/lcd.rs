@@ -1,16 +1,14 @@
 use yew::{html, Html};
-use crate::components::io_reg::IORegisters;
+use crate::components::io_reg::{IORegisters};
 
-impl IORegisters {
-    pub fn view_lcd(&self) -> Html {
-        html! {
-            <div id="lcd-accordion">
-                {self.view_display_control()}
-                {self.view_display_status()}
-            </div>
-        }
-    }
+pub trait LCD {
+    fn view_display_control(&self) -> Html;
+    fn view_display_status(&self) -> Html;
+    fn view_green_swap(&self) -> Html;
+    fn view_bg(&self) -> Html;
+}
 
+impl LCD for IORegisters {
     fn view_display_control(&self) -> Html {
         html! {
             <div class="card border-0">
@@ -23,7 +21,7 @@ impl IORegisters {
                     </h5>
                 </div>
 
-                <div id="display-control" class="collapse show" aria-labelledby="display-control-heading">
+                <div id="display-control" class="collapse" aria-labelledby="display-control-heading">
                     <div class="card-body">
                         <table class="table register-table">
                             <thead>
@@ -151,7 +149,106 @@ impl IORegisters {
                     </div>
                 </div>
             </div>
+        }
+    }
 
+    fn view_green_swap(&self) -> Html {
+        html! {
+            <div class="card border-0">
+                <div class="card-header p-0 bg-transparent" id="green-swap-heading">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#green-swap"
+                                aria-expanded="true" aria-controls="green-swap">
+                            {"Green Swap"}
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="green-swap" class="collapse" aria-labelledby="green-swap-heading">
+                    <div class="card-body">
+                        <table class="table register-table">
+                            <thead>
+                            <tr>
+                                <th scope="col">{"Field"}</th>
+                                <th scope="col">{"Val Dec"}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>{"Green Swap"}</td>
+                                <td>{self.props.gba.borrow().gpu.green_swap.get_green_swap()}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+    fn view_bg(&self) -> Html {
+        html! {
+            <div class="card border-0">
+                <div class="card-header p-0 bg-transparent" id="bg-heading">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#bg"
+                                aria-expanded="true" aria-controls="bg">
+                            {"Backgrounds"}
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="bg" class="collapse" aria-labelledby="bg-heading">
+                    <div class="card-body">
+                        <table class="table register-table">
+                            <thead>
+                            <tr>
+                                <th scope="col">{"Field"}</th>
+                                <th scope="col">{"Val Dec"}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>{"BG Priority"}</td>
+                                <td>{self.props.gba.borrow().gpu.backgrounds[0].control.get_bg_priority()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Character Base Block"}</td>
+                                <td>{self.props.gba.borrow().gpu.backgrounds[0].control.get_character_base_block()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Mosaic"}</td>
+                                <td>{self.props.gba.borrow().gpu.backgrounds[0].control.get_mosaic()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Colors"}</td>
+                                <td>{self.props.gba.borrow().gpu.backgrounds[0].control.get_colors()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Screen Base Block"}</td>
+                                <td>{self.props.gba.borrow().gpu.backgrounds[0].control.get_screen_base_block()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Display Area Overflow"}</td>
+                                <td>{self.props.gba.borrow().gpu.backgrounds[0].control.get_display_area_overflow()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Screen Size"}</td>
+                                <td>{self.props.gba.borrow().gpu.backgrounds[0].control.get_screen_size()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Horizontal Offset"}</td>
+                                <td>{self.props.gba.borrow().gpu.backgrounds[0].horizontal_offset.get_offset()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Vertical Offset"}</td>
+                                <td>{self.props.gba.borrow().gpu.backgrounds[0].vertical_offset.get_offset()}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         }
     }
 }
