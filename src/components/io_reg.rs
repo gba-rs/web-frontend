@@ -128,156 +128,122 @@ impl Component for IORegisters {
     fn view(&self) -> Html {
         html! {
             <div>
-//                <table class="table register-table">
-//                    <thead>
-//                        <tr>
-//                            <th scope="col">{"Reg"}</th>
-//                            <th scope="col">{"Val Hex"}</th>
-//                            <th scope="col">{"Val Dec"}</th>
-//                        </tr>
-//                    </thead>
-//                    <tbody>
-//                        {for (0..if self.props.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { 16 } else { 11 }).map(|val|{
-//                            let reg_val = self.props.gba.borrow().io_reg.get_register(val);
-//                            let reg_num = val;
-//                            html! {
-//                                <tr>
-//                                    <td class="text-left">{format!("r{}", val)}</td>
-//                                    <td class="text-right">
-//                                        <input class="hex-edit hex-edit-word" type="text" value={format!("{:08X}", reg_val)}
-//                                        onclick=self.link.callback(move |_|{ Msg::StartUpdate(format!("{:08X}", reg_val), RegUpdateType::Hex) })
-//                                        oninput=self.link.callback(move |e: InputData|{ Msg::UpdateReg(e.value, reg_num, RegUpdateType::Hex) })
-//                                        onkeypress=self.link.callback(|e: KeyPressEvent|{ if e.key() == "Enter" { Msg::FinishUpdate(RegUpdateType::Hex) } else { Msg::Nope } })
-//                                        />
-//                                    </td>
-//                                    <td class="text-right">
-//                                        <input class="hex-edit hex-edit-word" type="text" value={format!("{}", reg_val)}
-//                                        onclick=self.link.callback(move |_|{ Msg::StartUpdate(format!("{}", reg_val), RegUpdateType::Dec) })
-//                                        oninput=self.link.callback(move |e: InputData|{ Msg::UpdateReg(e.value, reg_num, RegUpdateType::Dec) })
-//                                        onkeypress=self.link.callback(|e: KeyPressEvent|{ if e.key() == "Enter" { Msg::FinishUpdate(RegUpdateType::Dec) } else { Msg::Nope } })
-//                                        />
-//                                    </td>
-//                                </tr>
-//                            }
-//                        })}
-//                    </tbody>
-//                </table>
-            <div id="accordion">
-              <div class="card">
-                <div class="card-header p-0" id="headingOne">
-                  <h5 class="mb-0">
-                    <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                      {"LCD"}
-                    </button>
-                  </h5>
-                </div>
+                <div id="accordion">
+                  <div class="card">
+                    <div class="card-header p-0 bg-transparent" id="headingOne">
+                      <h5 class="mb-0">
+                        <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                          {"LCD"}
+                        </button>
+                      </h5>
+                    </div>
 
-                <div id="collapseOne" class="collapse show" aria-labelledby="headingOne">
-                  <div class="card-body">
-                      {self.view_lcd()}
+                    <div id="collapseOne" class="collapse show" aria-labelledby="headingOne">
+                      <div class="card-body">
+                          {self.view_lcd()}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card">
+                    <div class="card-header p-0 bg-transparent" id="headingTwo">
+                      <h5 class="mb-0">
+                        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                          {"Sound"}
+                        </button>
+                      </h5>
+                    </div>
+                    <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo">
+                      <div class="card-body">
+                          {"Collapsible Group Item #2"}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card">
+                    <div class="card-header p-0 bg-transparent" id="headingThree">
+                      <h5 class="mb-0">
+                        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                          {"DMA"}
+                        </button>
+                      </h5>
+                    </div>
+                    <div id="collapseThree" class="collapse" aria-labelledby="headingThree">
+                      <div class="card-body">
+                          {"Collapsible Group Item #3"}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card">
+                    <div class="card-header p-0 bg-transparent" id="headingFour">
+                      <h5 class="mb-0">
+                        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                          {"Timer"}
+                        </button>
+                      </h5>
+                    </div>
+                    <div id="collapseFour" class="collapse" aria-labelledby="headingFour">
+                      <div class="card-body">
+                          {"Collapsible Group Item #3"}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card">
+                    <div class="card-header p-0 bg-transparent" id="headingFive">
+                      <h5 class="mb-0">
+                        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                          {"Serial Communication 1"}
+                        </button>
+                      </h5>
+                    </div>
+                    <div id="collapseFive" class="collapse" aria-labelledby="headingFive">
+                      <div class="card-body">
+                          {"Collapsible Group Item #3"}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card">
+                    <div class="card-header p-0 bg-transparent" id="headingSix">
+                      <h5 class="mb-0">
+                        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+                          {"Keypad Input"}
+                        </button>
+                      </h5>
+                    </div>
+                    <div id="collapseSix" class="collapse" aria-labelledby="headingSix">
+                      <div class="card-body">
+                          {"Collapsible Group Item #3"}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card">
+                    <div class="card-header p-0 bg-transparent" id="headingSeven">
+                      <h5 class="mb-0">
+                        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven">
+                          {"Serial Communication 2"}
+                        </button>
+                      </h5>
+                    </div>
+                    <div id="collapseSeven" class="collapse" aria-labelledby="headingSeven">
+                      <div class="card-body">
+                          {"Collapsible Group Item #3"}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card">
+                    <div class="card-header p-0 bg-transparent" id="headingEight">
+                      <h5 class="mb-0">
+                        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseEight" aria-expanded="false" aria-controls="collapseEight">
+                          {"Interrupt, Waitstate, and Power-Down"}
+                        </button>
+                      </h5>
+                    </div>
+                    <div id="collapseEight" class="collapse" aria-labelledby="headingEight">
+                      <div class="card-body">
+                          {"Collapsible Group Item #3"}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div class="card">
-                <div class="card-header p-0" id="headingTwo">
-                  <h5 class="mb-0">
-                    <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                      {"Sound"}
-                    </button>
-                  </h5>
-                </div>
-                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo">
-                  <div class="card-body">
-                      {"Collapsible Group Item #2"}
-                  </div>
-                </div>
-              </div>
-              <div class="card">
-                <div class="card-header p-0" id="headingThree">
-                  <h5 class="mb-0">
-                    <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                      {"DMA"}
-                    </button>
-                  </h5>
-                </div>
-                <div id="collapseThree" class="collapse" aria-labelledby="headingThree">
-                  <div class="card-body">
-                      {"Collapsible Group Item #3"}
-                  </div>
-                </div>
-              </div>
-              <div class="card">
-                <div class="card-header p-0" id="headingFour">
-                  <h5 class="mb-0">
-                    <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-                      {"Timer"}
-                    </button>
-                  </h5>
-                </div>
-                <div id="collapseFour" class="collapse" aria-labelledby="headingFour">
-                  <div class="card-body">
-                      {"Collapsible Group Item #3"}
-                  </div>
-                </div>
-              </div>
-              <div class="card">
-                <div class="card-header p-0" id="headingFive">
-                  <h5 class="mb-0">
-                    <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
-                      {"Serial Communication 1"}
-                    </button>
-                  </h5>
-                </div>
-                <div id="collapseFive" class="collapse" aria-labelledby="headingFive">
-                  <div class="card-body">
-                      {"Collapsible Group Item #3"}
-                  </div>
-                </div>
-              </div>
-              <div class="card">
-                <div class="card-header p-0" id="headingSix">
-                  <h5 class="mb-0">
-                    <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
-                      {"Keypad Input"}
-                    </button>
-                  </h5>
-                </div>
-                <div id="collapseSix" class="collapse" aria-labelledby="headingSix">
-                  <div class="card-body">
-                      {"Collapsible Group Item #3"}
-                  </div>
-                </div>
-              </div>
-              <div class="card">
-                <div class="card-header p-0" id="headingSeven">
-                  <h5 class="mb-0">
-                    <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven">
-                      {"Serial Communication 2"}
-                    </button>
-                  </h5>
-                </div>
-                <div id="collapseSeven" class="collapse" aria-labelledby="headingSeven">
-                  <div class="card-body">
-                      {"Collapsible Group Item #3"}
-                  </div>
-                </div>
-              </div>
-              <div class="card">
-                <div class="card-header p-0" id="headingEight">
-                  <h5 class="mb-0">
-                    <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseEight" aria-expanded="false" aria-controls="collapseEight">
-                      {"Interrupt, Waitstate, and Power-Down"}
-                    </button>
-                  </h5>
-                </div>
-                <div id="collapseEight" class="collapse" aria-labelledby="headingEight">
-                  <div class="card-body">
-                      {"Collapsible Group Item #3"}
-                  </div>
-                </div>
-              </div>
             </div>
-        </div>
         }
     }
 }
