@@ -1,5 +1,5 @@
 use yew::prelude::*;
-use yew::{html, Component, ComponentLink, InputData, KeyPressEvent, Html, ShouldRender};
+use yew::{html, Component, ComponentLink, InputData, KeyboardEvent, Html, ShouldRender};
 use gba_emulator::gba::GBA;
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -13,13 +13,9 @@ pub struct MemoryViewer {
 
 #[derive(Properties, Clone)]
 pub struct MemoryViewerProp {
-    #[props(required)]
     pub gba: Rc<RefCell<GBA>>,
-    #[props(required)]
     pub min: u32,
-    #[props(required)]
     pub max: u32,
-    #[props(required)]
     pub initialized: bool
 }
 
@@ -92,7 +88,7 @@ impl Component for MemoryViewer {
                                             <input type="text" class="hex-edit hex-edit-byte" value={format!(" {:02X}", byte)} 
                                             onclick=self.link.callback(move |_|{ Msg::StartHexEdit(format!("{:X}", byte)) })
                                             oninput=self.link.callback(move |e: InputData|{ Msg::UpdateHexString(e.value) })
-                                            onkeypress=self.link.callback(move |e: KeyPressEvent|{ if e.key() == "Enter" { Msg::WriteMemory(address) } else { Msg::Nope }})/>
+                                            onkeypress=self.link.callback(move |e: KeyboardEvent|{ if e.key() == "Enter" { Msg::WriteMemory(address) } else { Msg::Nope }})/>
                                         }
                                     } else {
                                         html! {

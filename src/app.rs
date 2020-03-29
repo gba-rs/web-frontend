@@ -248,7 +248,7 @@ impl Component for App {
             },
             Msg::Files(files, rom) => {
                 for file in files.into_iter() {
-                    let task = {
+                    let task_result = {
                         if rom {
                             let callback = self.link.callback(Msg::LoadedRom);
                             self.reader.read_file(file, callback)
@@ -257,7 +257,7 @@ impl Component for App {
                             self.reader.read_file(file, callback)
                         }
                     };
-                    self.tasks.push(task);
+                    self.tasks.push(task_result.unwrap());
                 }
                 false
             }
@@ -401,7 +401,9 @@ impl App {
                             <input type="file" class="custom-file-input" id="inputGroupFile01" aria-describedby="inputGroupFileAddon01" onchange=self.link.callback(move |value| {
                                 let mut result = Vec::new();
                                 if let ChangeData::Files(files) = value {
-                                    result.extend(files);
+                                    for x in 0..files.length() {
+                                        result.push(files.get(x).unwrap())
+                                    }
                                 }
                                 Msg::Files(result, false)
                             })/>
@@ -419,9 +421,11 @@ impl App {
                             <input type="file" class="custom-file-input" id="inputGroupFile02" aria-describedby="inputGroupFileAddon02" onchange=self.link.callback(|value| {
                                 let mut result = Vec::new();
                                 if let ChangeData::Files(files) = value {
-                                    result.extend(files);
+                                    for x in 0..files.length() {
+                                        result.push(files.get(x).unwrap())
+                                    }
                                 }
-                                Msg::Files(result, true)
+                                Msg::Files(result, false)
                             })/>
                             <label class="custom-file-label" for="inputGroupFile02">{format!("{}", self.rom_name)}</label>
                         </div>

@@ -12,7 +12,6 @@ pub struct Status {
 
 #[derive(Properties, Clone)]
 pub struct StatusProp {
-    #[props(required)]
     pub gba: Rc<RefCell<GBA>>
 }
 
