@@ -425,7 +425,7 @@ impl App {
                                         result.push(files.get(x).unwrap())
                                     }
                                 }
-                                Msg::Files(result, false)
+                                Msg::Files(result, true)
                             })/>
                             <label class="custom-file-label" for="inputGroupFile02">{format!("{}", self.rom_name)}</label>
                         </div>
