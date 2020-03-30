@@ -12,8 +12,11 @@ use crate::components::{
     navbar::NavBar, 
     cpsr::Cpsr,
     status::Status,
-    memory_viewer::MemoryViewer
+    memory_viewer::MemoryViewer,
+    palette_viewer
 };
+
+
 
 use crate::logging;
 
@@ -35,7 +38,7 @@ pub struct App {
     rom_name: String,
     bios_name: String,
     disassembly: Vec<DisassemblyElement>,
-    gba: Rc<RefCell<GBA>>,
+    pub gba: Rc<RefCell<GBA>>,
     link: ComponentLink<App>,
     hex: bool,
     follow_pc: bool,
@@ -72,7 +75,8 @@ pub enum Msg {
     UpdateInputString(String, RangeUpdate),
     UpdateRunString(String),
     StartRun,
-    UpdateBreakPoint(u32, bool)
+    UpdateBreakPoint(u32, bool),
+    Frame
 }
 
 impl Component for App {
@@ -139,13 +143,22 @@ impl Component for App {
                 if self.follow_pc {
                     self.follow_pc_disassemble();
                 }
-
+                
                 true
             },
             Msg::Step(step_count) => {
                 for _ in 0..step_count {
                     self.gba.as_ref().borrow_mut().single_step();
                 }
+
+                if self.follow_pc {
+                    self.follow_pc_disassemble();
+                }
+
+                true
+            },
+            Msg::Frame => {
+                self.gba.borrow_mut().frame();
 
                 if self.follow_pc {
                     self.follow_pc_disassemble();
@@ -174,16 +187,22 @@ impl Component for App {
                 // self.gba.borrow_mut().single_step();
                 let mut current_pc = if self.gba.borrow().cpu.get_instruction_set() == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
 
-                while current_pc != address {
+                loop {
                 // while !self.break_points.contains(current_pc);
                     self.gba.borrow_mut().key_status.set_register(0x3FF); // Change this to get the keys down
                     self.gba.borrow_mut().single_step();
                     current_pc = if self.gba.borrow().cpu.get_instruction_set() == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
+
+                    if current_pc == address {
+                        break;
+                    }
                 }
 
                 if self.follow_pc {
                     self.follow_pc_disassemble();
                 }
+
+                // self.draw_canvas();
                 
                 true
             },
@@ -318,7 +337,19 @@ impl Component for App {
                             </div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div>
+                            {self.view_bg_palette()}
+                        </div>
+                        <div>
+                            {self.view_obj_palette()}
+                        </div>
+                    </div>
+                    // <div class="row">
+                    //     <canvas style="width: 65535px; height: 500px" id="tilemap-canvas"></canvas>
+                    // </div>
                 </div>
+
             </>
         }
     }
@@ -449,6 +480,7 @@ impl App {
                     <div class="btn-group" role="group">
                         <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Init})>{"Init Emulator"}</button>
                         <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Step(1)})>{"Step"}</button>
+                        <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Frame})>{"Frame"}</button>
                     </div>
                 </div>
 
@@ -538,4 +570,6 @@ impl App {
             }
         }
     }
+
+    
 }
