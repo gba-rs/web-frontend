@@ -1,5 +1,5 @@
 use yew::prelude::*;
-use yew::{html, Component, ComponentLink, InputData, KeyPressEvent, Html, ShouldRender};
+use yew::{html, Component, ComponentLink, InputData, KeyboardEvent, Html, ShouldRender};
 use gba_emulator::gba::GBA;
 use gba_emulator::cpu::cpu::InstructionSet;
 use std::rc::Rc;
@@ -16,9 +16,7 @@ pub struct Registers {
 
 #[derive(Properties, Clone)]
 pub struct RegistersProp {
-    #[props(required)]
     pub gba: Rc<RefCell<GBA>>,
-    #[props(required)]
     pub hex: bool
 }
 
@@ -132,14 +130,14 @@ impl Component for Registers {
                                         <input class="hex-edit hex-edit-word" type="text" value={format!("{:08X}", reg_val)} 
                                         onclick=self.link.callback(move |_|{ Msg::StartUpdate(format!("{:08X}", reg_val), RegUpdateType::Hex) })
                                         oninput=self.link.callback(move |e: InputData|{ Msg::UpdateReg(e.value, reg_num, RegUpdateType::Hex) })
-                                        onkeypress=self.link.callback(|e: KeyPressEvent|{ if e.key() == "Enter" { Msg::FinishUpdate(RegUpdateType::Hex) } else { Msg::Nope } })
+                                        onkeypress=self.link.callback(|e: KeyboardEvent|{ if e.key() == "Enter" { Msg::FinishUpdate(RegUpdateType::Hex) } else { Msg::Nope } })
                                         />
                                     </td>
                                     <td class="text-right">
                                         <input class="hex-edit hex-edit-word" type="text" value={format!("{}", reg_val)}
                                         onclick=self.link.callback(move |_|{ Msg::StartUpdate(format!("{}", reg_val), RegUpdateType::Dec) })
                                         oninput=self.link.callback(move |e: InputData|{ Msg::UpdateReg(e.value, reg_num, RegUpdateType::Dec) })
-                                        onkeypress=self.link.callback(|e: KeyPressEvent|{ if e.key() == "Enter" { Msg::FinishUpdate(RegUpdateType::Dec) } else { Msg::Nope } })
+                                        onkeypress=self.link.callback(|e: KeyboardEvent|{ if e.key() == "Enter" { Msg::FinishUpdate(RegUpdateType::Dec) } else { Msg::Nope } })
                                         />
                                     </td>
                                 </tr>

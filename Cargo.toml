@@ -18,6 +18,6 @@ crate-type = ["cdylib"]
 [dependencies]
 gba-emulator = {path = "../gba-emu"}
 wasm-bindgen = "^0.2.58"
-yew-router = { git = "https://github.com/yewstack/yew_router", branch="master" }
-yew = {git = "https://github.com/yewstack/yew", branch = "master"}
+yew-router = {version = "0.11.0", features = ["web_sys"]}
+yew = {version = "0.14.2", features = ["web_sys"]}
 log = "0.4.8"
