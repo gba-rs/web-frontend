@@ -5,7 +5,7 @@ pub trait LCD {
     fn view_display_control(&self) -> Html;
     fn view_display_status(&self) -> Html;
     fn view_green_swap(&self) -> Html;
-    fn view_bg(&self) -> Html;
+    fn view_bg(&self, bg_number: usize) -> Html;
 }
 
 impl LCD for IORegisters {
@@ -186,19 +186,19 @@ impl LCD for IORegisters {
         }
     }
 
-    fn view_bg(&self) -> Html {
+    fn view_bg(&self, bg_number: usize) -> Html {
         html! {
             <div class="card border-0">
-                <div class="card-header p-0 bg-transparent" id="bg-heading">
+                <div class="card-header p-0 bg-transparent" id={format!("bg{}-heading", bg_number + 1)}>
                     <h5 class="mb-0">
-                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#bg"
-                                aria-expanded="true" aria-controls="bg">
-                            {"Backgrounds"}
+                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target={format!("#bg{}", bg_number + 1)}
+                                aria-expanded="true" aria-controls={format!("bg{}", bg_number + 1)}>
+                            {format!("Background {}", bg_number + 1)}
                         </button>
                     </h5>
                 </div>
 
-                <div id="bg" class="collapse" aria-labelledby="bg-heading">
+                <div id={format!("bg{}", bg_number + 1)} class="collapse" aria-labelledby={format!("bg{}-heading", bg_number + 1)}  >
                     <div class="card-body">
                         <table class="table register-table">
                             <thead>
@@ -210,39 +210,39 @@ impl LCD for IORegisters {
                             <tbody>
                             <tr>
                                 <td>{"BG Priority"}</td>
-                                <td>{self.props.gba.borrow().gpu.backgrounds[0].control.get_bg_priority()}</td>
+                                <td>{self.props.gba.borrow().gpu.backgrounds[bg_number].control.get_bg_priority()}</td>
                             </tr>
                             <tr>
                                 <td>{"Character Base Block"}</td>
-                                <td>{self.props.gba.borrow().gpu.backgrounds[0].control.get_character_base_block()}</td>
+                                <td>{self.props.gba.borrow().gpu.backgrounds[bg_number].control.get_character_base_block()}</td>
                             </tr>
                             <tr>
                                 <td>{"Mosaic"}</td>
-                                <td>{self.props.gba.borrow().gpu.backgrounds[0].control.get_mosaic()}</td>
+                                <td>{self.props.gba.borrow().gpu.backgrounds[bg_number].control.get_mosaic()}</td>
                             </tr>
                             <tr>
                                 <td>{"Colors"}</td>
-                                <td>{self.props.gba.borrow().gpu.backgrounds[0].control.get_colors()}</td>
+                                <td>{self.props.gba.borrow().gpu.backgrounds[bg_number].control.get_colors()}</td>
                             </tr>
                             <tr>
                                 <td>{"Screen Base Block"}</td>
-                                <td>{self.props.gba.borrow().gpu.backgrounds[0].control.get_screen_base_block()}</td>
+                                <td>{self.props.gba.borrow().gpu.backgrounds[bg_number].control.get_screen_base_block()}</td>
                             </tr>
                             <tr>
                                 <td>{"Display Area Overflow"}</td>
-                                <td>{self.props.gba.borrow().gpu.backgrounds[0].control.get_display_area_overflow()}</td>
+                                <td>{self.props.gba.borrow().gpu.backgrounds[bg_number].control.get_display_area_overflow()}</td>
                             </tr>
                             <tr>
                                 <td>{"Screen Size"}</td>
-                                <td>{self.props.gba.borrow().gpu.backgrounds[0].control.get_screen_size()}</td>
+                                <td>{self.props.gba.borrow().gpu.backgrounds[bg_number].control.get_screen_size()}</td>
                             </tr>
                             <tr>
                                 <td>{"Horizontal Offset"}</td>
-                                <td>{self.props.gba.borrow().gpu.backgrounds[0].horizontal_offset.get_offset()}</td>
+                                <td>{self.props.gba.borrow().gpu.backgrounds[bg_number].horizontal_offset.get_offset()}</td>
                             </tr>
                             <tr>
                                 <td>{"Vertical Offset"}</td>
-                                <td>{self.props.gba.borrow().gpu.backgrounds[0].vertical_offset.get_offset()}</td>
+                                <td>{self.props.gba.borrow().gpu.backgrounds[bg_number].vertical_offset.get_offset()}</td>
                             </tr>
                             </tbody>
                         </table>

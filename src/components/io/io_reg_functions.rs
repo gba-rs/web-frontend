@@ -9,7 +9,10 @@ impl IORegisters {
                 {self.view_display_control()}
                 {self.view_display_status()}
                 {self.view_green_swap()}
-                {self.view_bg()}
+                {self.view_bg(0)}
+                {self.view_bg(1)}
+                {self.view_bg(2)}
+                {self.view_bg(3)}
             </div>
         }
     }
