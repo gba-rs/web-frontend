@@ -11,7 +11,7 @@ pub trait LCD {
     fn view_control_window_inside(&self) -> Html;
     fn view_control_window_outside(&self) -> Html;
     fn view_mosaic_size(&self) -> Html;
-    fn view_color_spec_effect_solution(&self) -> Html;
+    fn view_color_spec_effect_selection(&self) -> Html;
     fn view_alpha_blending(&self) -> Html;
     fn view_brightness(&self) -> Html;
 }
@@ -524,18 +524,202 @@ impl LCD for IORegisters {
     }
 
     fn view_mosaic_size(&self) -> Html {
-        unimplemented!()
+        html! {
+            <div class="card border-0">
+                <div class="card-header p-0 bg-transparent" id="mosaic-size-heading">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#mosaic-size"
+                                aria-expanded="true" aria-controls="mosaic-size">
+                            {"Mosaic Size"}
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="mosaic-size" class="collapse" aria-labelledby="mosaic-size-heading">
+                    <div class="card-body">
+                        <table class="table register-table">
+                            <thead>
+                            <tr>
+                                <th scope="col">{"Field"}</th>
+                                <th scope="col">{"Val Dec"}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>{"BG Mosaic HSize"}</td>
+                                <td>{self.props.gba.borrow().gpu.mosaic_size.get_bg_mosaic_hsize()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"BG Mosaic VSize"}</td>
+                                <td>{self.props.gba.borrow().gpu.mosaic_size.get_bg_mosaic_vsize()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Obj Mosaic HSize"}</td>
+                                <td>{self.props.gba.borrow().gpu.mosaic_size.get_obj_mosaic_hsize()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Obj Mosaic VSize"}</td>
+                                <td>{self.props.gba.borrow().gpu.mosaic_size.get_obj_mosaic_vsize()}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
     }
 
-    fn view_color_spec_effect_solution(&self) -> Html {
-        unimplemented!()
+    fn view_color_spec_effect_selection(&self) -> Html {
+        html! {
+            <div class="card border-0">
+                <div class="card-header p-0 bg-transparent" id="color-spec-effec-sel-heading">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#color-spec-effec-sel"
+                                aria-expanded="true" aria-controls="color-spec-effec-sel">
+                            {"Color Special Effect Selection"}
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="color-spec-effec-sel" class="collapse" aria-labelledby="color-spec-effec-sel-heading">
+                    <div class="card-body">
+                        <table class="table register-table">
+                            <thead>
+                            <tr>
+                                <th scope="col">{"Field"}</th>
+                                <th scope="col">{"Val Dec"}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>{"BG0 1st Target Pixel"}</td>
+                                <td>{self.props.gba.borrow().gpu.color_special_effects_selection.get_bg0_1st_target_pixel()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"BG1 1st Target Pixel"}</td>
+                                <td>{self.props.gba.borrow().gpu.color_special_effects_selection.get_bg1_1st_target_pixel()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"BG2 1st Target Pixel"}</td>
+                                <td>{self.props.gba.borrow().gpu.color_special_effects_selection.get_bg2_1st_target_pixel()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"BG3 1st Target Pixel"}</td>
+                                <td>{self.props.gba.borrow().gpu.color_special_effects_selection.get_bg3_1st_target_pixel()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Obj 1st Target Pixel"}</td>
+                                <td>{self.props.gba.borrow().gpu.color_special_effects_selection.get_obj_1st_target_pixel()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"BD 1st Target Pixel"}</td>
+                                <td>{self.props.gba.borrow().gpu.color_special_effects_selection.get_bd_1st_target_pixel()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Color Special Effect"}</td>
+                                <td>{self.props.gba.borrow().gpu.color_special_effects_selection.get_color_special_effect()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"BG0 2nd Target Pixel"}</td>
+                                <td>{self.props.gba.borrow().gpu.color_special_effects_selection.get_bg0_2nd_target_pixel()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"BG1 2nd Target Pixel"}</td>
+                                <td>{self.props.gba.borrow().gpu.color_special_effects_selection.get_bg1_2nd_target_pixel()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"BG2 2nd Target Pixel"}</td>
+                                <td>{self.props.gba.borrow().gpu.color_special_effects_selection.get_bg2_2nd_target_pixel()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"BG3 2nd Target Pixel"}</td>
+                                <td>{self.props.gba.borrow().gpu.color_special_effects_selection.get_bg3_2nd_target_pixel()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Obj 2nd Target Pixel"}</td>
+                                <td>{self.props.gba.borrow().gpu.color_special_effects_selection.get_obj_2nd_target_pixel()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"BD 2nd Target Pixel"}</td>
+                                <td>{self.props.gba.borrow().gpu.color_special_effects_selection.get_bd_2nd_target_pixel()}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
     }
 
     fn view_alpha_blending(&self) -> Html {
-        unimplemented!()
+        html! {
+            <div class="card border-0">
+                <div class="card-header p-0 bg-transparent" id="alpha-blending-heading">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#alpha-blending"
+                                aria-expanded="true" aria-controls="alpha-blending">
+                            {"Alpha Blending Coefficients"}
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="alpha-blending" class="collapse" aria-labelledby="alpha-blending-heading">
+                    <div class="card-body">
+                        <table class="table register-table">
+                            <thead>
+                            <tr>
+                                <th scope="col">{"Field"}</th>
+                                <th scope="col">{"Val Dec"}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>{"EVA Coefficient"}</td>
+                                <td>{self.props.gba.borrow().gpu.alpha_blending_coefficients.get_eva_coefficient()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"EVB Coefficient"}</td>
+                                <td>{self.props.gba.borrow().gpu.alpha_blending_coefficients.get_evb_coefficient()}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
     }
 
     fn view_brightness(&self) -> Html {
-        unimplemented!()
+        html! {
+            <div class="card border-0">
+                <div class="card-header p-0 bg-transparent" id="brightness-heading">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#brightness"
+                                aria-expanded="true" aria-controls="brightness">
+                            {"Brightness Coefficient"}
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="brightness" class="collapse" aria-labelledby="brightness-heading">
+                    <div class="card-body">
+                        <table class="table register-table">
+                            <thead>
+                            <tr>
+                                <th scope="col">{"Field"}</th>
+                                <th scope="col">{"Val Dec"}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>{"EVY Coefficient"}</td>
+                                <td>{self.props.gba.borrow().gpu.brightness_coefficient.get_evy_coefficient()}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
     }
 }

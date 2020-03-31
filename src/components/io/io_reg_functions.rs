@@ -19,6 +19,10 @@ impl IORegisters {
                 {self.view_window(1)}
                 {self.view_control_window_inside()}
                 {self.view_control_window_outside()}
+                {self.view_mosaic_size()}
+                {self.view_color_spec_effect_selection()}
+                {self.view_alpha_blending()}
+                {self.view_brightness()}
             </div>
         }
     }
