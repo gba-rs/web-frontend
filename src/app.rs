@@ -74,6 +74,7 @@ pub enum Msg {
     UpdateInputString(String, RangeUpdate),
     UpdateRunString(String),
     StartRun,
+    Frame,
 }
 
 #[derive(PartialEq)]
@@ -275,6 +276,15 @@ impl Component for App {
                 self.active_menu = menu_item;
                 true
             }
+            Msg::Frame => {
+                self.gba.borrow_mut().frame();
+
+                if self.follow_pc {
+                    self.follow_pc_disassemble();
+                }
+
+                true
+            },
         }
     }
 
@@ -462,6 +472,7 @@ impl App {
                     <div class="btn-group" role="group">
                         <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Init})>{"Init Emulator"}</button>
                         <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Step(1)})>{"Step"}</button>
+                        <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Frame})>{"Frame"}</button>
                     </div>
                 </div>
 

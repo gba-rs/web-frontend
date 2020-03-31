@@ -29,11 +29,11 @@ impl Component for IORegisters {
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         IORegisters {
-            props: props,
+            props,
             updated_reg_dec: "".to_string(),
             updated_reg_hex: "".to_string(),
             update_reg_num: 0,
-            link: link,
+            link,
         }
     }
 
