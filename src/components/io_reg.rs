@@ -183,7 +183,7 @@ impl Component for IORegisters {
                     </div>
                     <div id="collapseSix" class="collapse" aria-labelledby="headingSix">
                       <div class="card-body">
-                          {"Collapsible Group Item #3"}
+                          {self.view_keypad_input()}
                       </div>
                     </div>
                   </div>

@@ -1,6 +1,7 @@
 use yew::{html, Html};
 use crate::components::io_reg::{IORegisters};
 use crate::components::io::lcd::LCD;
+use crate::components::io::keypad::Keypad;
 
 impl IORegisters {
     pub fn view_lcd(&self) -> Html {
@@ -23,6 +24,15 @@ impl IORegisters {
                 {self.view_color_spec_effect_selection()}
                 {self.view_alpha_blending()}
                 {self.view_brightness()}
+            </div>
+        }
+    }
+
+    pub fn view_keypad_input(&self) -> Html {
+        html! {
+            <div id="keypad-accordion">
+                {self.view_key_status()}
+                {self.view_key_interrupt_control()}
             </div>
         }
     }
