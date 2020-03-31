@@ -211,7 +211,7 @@ impl Component for IORegisters {
                     </div>
                     <div id="collapseEight" class="collapse" aria-labelledby="headingEight">
                       <div class="card-body">
-                          {"Collapsible Group Item #3"}
+                          {self.view_interrupt_waitstate_powerdown()}
                       </div>
                     </div>
                   </div>

@@ -2,6 +2,7 @@ use yew::{html, Html};
 use crate::components::io_reg::{IORegisters};
 use crate::components::io::lcd::LCD;
 use crate::components::io::keypad::Keypad;
+use crate::components::io::interrupt_ws_pd::InterruptWaitStatePowerDown;
 
 impl IORegisters {
     pub fn view_lcd(&self) -> Html {
@@ -33,6 +34,16 @@ impl IORegisters {
             <div id="keypad-accordion">
                 {self.view_key_status()}
                 {self.view_key_interrupt_control()}
+            </div>
+        }
+    }
+
+    pub fn view_interrupt_waitstate_powerdown(&self) -> Html {
+        html! {
+            <div id="iwspd-accordion">
+                {self.view_interrupt_master_enable_register()}
+                {self.view_interrupt_enable_register()}
+                {self.view_interrupt_request_flags()}
             </div>
         }
     }
