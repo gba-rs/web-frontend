@@ -6,7 +6,14 @@ pub trait LCD {
     fn view_display_status(&self) -> Html;
     fn view_green_swap(&self) -> Html;
     fn view_bg(&self, bg_number: usize) -> Html;
-    fn view_bg_affine_components(&self, bg_number: usize) -> Html;
+    fn view_bg_affine_component(&self, bg_number: usize) -> Html;
+    fn view_window(&self, window_number: usize) -> Html;
+    fn view_control_window_inside(&self) -> Html;
+    fn view_control_window_outside(&self) -> Html;
+    fn view_mosaic_size(&self) -> Html;
+    fn view_color_spec_effect_solution(&self) -> Html;
+    fn view_alpha_blending(&self) -> Html;
+    fn view_brightness(&self) -> Html;
 }
 
 impl LCD for IORegisters {
@@ -253,7 +260,7 @@ impl LCD for IORegisters {
         }
     }
 
-    fn view_bg_affine_components(&self, bg_number: usize) -> Html {
+    fn view_bg_affine_component(&self, bg_number: usize) -> Html {
         html! {
             <div class="card border-0">
                 <div class="card-header p-0 bg-transparent" id={format!("bg_affine{}-heading", bg_number + 1)}>
@@ -361,5 +368,174 @@ impl LCD for IORegisters {
                 </div>
             </div>
         }
+    }
+    fn view_window(&self, window_number: usize) -> Html {
+        html! {
+            <div class="card border-0">
+                <div class="card-header p-0 bg-transparent" id={format!("window{}-heading", window_number + 1)}>
+                    <h5 class="mb-0">
+                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target={format!("#window{}", window_number + 1)}
+                                aria-expanded="true" aria-controls={format!("window{}", window_number + 1)}>
+                            {format!("Window {}", window_number + 1)}
+                        </button>
+                    </h5>
+                </div>
+
+                <div id={format!("window{}", window_number + 1)} class="collapse" aria-labelledby={format!("window{}-heading", window_number + 1)}  >
+                    <div class="card-body">
+                        <table class="table register-table">
+                            <thead>
+                            <tr>
+                                <th scope="col">{"Field"}</th>
+                                <th scope="col">{"Val Dec"}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>{"X1"}</td>
+                                <td>{self.props.gba.borrow().gpu.windows[window_number].horizontal_dimensions.get_X1()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"X2"}</td>
+                                <td>{self.props.gba.borrow().gpu.windows[window_number].horizontal_dimensions.get_X2()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Y1"}</td>
+                                <td>{self.props.gba.borrow().gpu.windows[window_number].vertical_dimensions.get_Y1()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Y2"}</td>
+                                <td>{self.props.gba.borrow().gpu.windows[window_number].vertical_dimensions.get_Y2()}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+    fn view_control_window_inside(&self) -> Html {
+        html! {
+            <div class="card border-0">
+                <div class="card-header p-0 bg-transparent" id="control-window-inside-heading">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#control-window-inside"
+                                aria-expanded="true" aria-controls="control-window-inside">
+                            {"Control Window Inside"}
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="control-window-inside" class="collapse" aria-labelledby="control-window-inside-heading">
+                    <div class="card-body">
+                        <table class="table register-table">
+                            <thead>
+                            <tr>
+                                <th scope="col">{"Field"}</th>
+                                <th scope="col">{"Val Dec"}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>{"Window 0 BG Enable Bits"}</td>
+                                <td>{self.props.gba.borrow().gpu.control_window_inside.get_window0_bg_enable_bits()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Window 0 Obj Enable Bits"}</td>
+                                <td>{self.props.gba.borrow().gpu.control_window_inside.get_window0_obj_enable_bits()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Window 0 Color Special Effect"}</td>
+                                <td>{self.props.gba.borrow().gpu.control_window_inside.get_window0_color_special_effect()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Window 1 BG Enable Bits"}</td>
+                                <td>{self.props.gba.borrow().gpu.control_window_inside.get_window1_bg_enable_bits()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Window 1 Obj Enable Bits"}</td>
+                                <td>{self.props.gba.borrow().gpu.control_window_inside.get_window1_obj_enable_bits()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Window 1 Color Special Effect"}</td>
+                                <td>{self.props.gba.borrow().gpu.control_window_inside.get_window1_color_special_effect()}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+    fn view_control_window_outside(&self) -> Html {
+        html! {
+            <div class="card border-0">
+                <div class="card-header p-0 bg-transparent" id="control-window-outside-heading">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#control-window-outside"
+                                aria-expanded="true" aria-controls="control-window-outside">
+                            {"Control Window Outside"}
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="control-window-outside" class="collapse" aria-labelledby="control-window-outside-heading">
+                    <div class="card-body">
+                        <table class="table register-table">
+                            <thead>
+                            <tr>
+                                <th scope="col">{"Field"}</th>
+                                <th scope="col">{"Val Dec"}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>{"BG Enable Bits"}</td>
+                                <td>{self.props.gba.borrow().gpu.control_window_outside.get_outside_bg_enable_bits()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Obj Enable Bits"}</td>
+                                <td>{self.props.gba.borrow().gpu.control_window_outside.get_outside_obj_enable_bits()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Color Effects"}</td>
+                                <td>{self.props.gba.borrow().gpu.control_window_outside.get_outside_color_special_effect()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Obj Window BG Enable Bits"}</td>
+                                <td>{self.props.gba.borrow().gpu.control_window_outside.get_obj_window_bg_enable_bits()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Obj Window Obj Enable Bits"}</td>
+                                <td>{self.props.gba.borrow().gpu.control_window_outside.get_obj_window_obj_enable_bits()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Obj Window Color Special Effect"}</td>
+                                <td>{self.props.gba.borrow().gpu.control_window_outside.get_obj_window_color_special_effect()}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+    fn view_mosaic_size(&self) -> Html {
+        unimplemented!()
+    }
+
+    fn view_color_spec_effect_solution(&self) -> Html {
+        unimplemented!()
+    }
+
+    fn view_alpha_blending(&self) -> Html {
+        unimplemented!()
+    }
+
+    fn view_brightness(&self) -> Html {
+        unimplemented!()
     }
 }
