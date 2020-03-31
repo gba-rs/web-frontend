@@ -11,7 +11,6 @@ pub struct Cpsr {
 
 #[derive(Properties, Clone)]
 pub struct CpsrProp {
-    #[props(required)]
     pub gba: Rc<RefCell<GBA>>
 }
 
