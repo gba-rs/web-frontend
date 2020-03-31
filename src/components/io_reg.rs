@@ -100,7 +100,7 @@ impl Component for IORegisters {
 
     fn view(&self) -> Html {
         html! {
-            <div>
+            <div class="io-reg" style="overflow:scroll; height: 800px;">
                 <div id="accordion">
                   <div class="card border-0">
                     <div class="card-header p-0 bg-transparent" id="headingOne">

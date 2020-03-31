@@ -13,6 +13,8 @@ impl IORegisters {
                 {self.view_bg(1)}
                 {self.view_bg(2)}
                 {self.view_bg(3)}
+                {self.view_bg_affine_components(0)}
+                {self.view_bg_affine_components(1)}
             </div>
         }
     }

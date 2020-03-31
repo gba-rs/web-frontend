@@ -3,4 +3,4 @@ build:
 	rollup ./main.js --format iife --file ./pkg/bundle.js
 
 run: build
-	python -m http.server 8080
+	python3 -m http.server 8080

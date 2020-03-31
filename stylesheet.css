@@ -102,6 +102,16 @@ body{
     min-width: 15em;
 }
 
+.io-reg {
+    overflow: scroll;
+    height: 800px;
+    font-size: 0.8rem;
+}
+
+.io-reg .btn-link {
+    font-size: 0.8rem;
+}
+
 /*Utilities*/
 .text-center{
     text-align: center;

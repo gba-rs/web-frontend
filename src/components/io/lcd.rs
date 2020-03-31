@@ -6,6 +6,7 @@ pub trait LCD {
     fn view_display_status(&self) -> Html;
     fn view_green_swap(&self) -> Html;
     fn view_bg(&self, bg_number: usize) -> Html;
+    fn view_bg_affine_components(&self, bg_number: usize) -> Html;
 }
 
 impl LCD for IORegisters {
@@ -243,6 +244,116 @@ impl LCD for IORegisters {
                             <tr>
                                 <td>{"Vertical Offset"}</td>
                                 <td>{self.props.gba.borrow().gpu.backgrounds[bg_number].vertical_offset.get_offset()}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+    fn view_bg_affine_components(&self, bg_number: usize) -> Html {
+        html! {
+            <div class="card border-0">
+                <div class="card-header p-0 bg-transparent" id={format!("bg_affine{}-heading", bg_number + 1)}>
+                    <h5 class="mb-0">
+                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target={format!("#bg_affine{}", bg_number + 1)}
+                                aria-expanded="true" aria-controls={format!("bg_affine{}", bg_number + 1)}>
+                            {format!("BG Affine Component {}", bg_number + 1)}
+                        </button>
+                    </h5>
+                </div>
+
+                <div id={format!("bg_affine{}", bg_number + 1)} class="collapse" aria-labelledby={format!("bg_affine{}-heading", bg_number + 1)}  >
+                    <div class="card-body">
+                        <table class="table register-table">
+                            <thead>
+                            <tr>
+                                <th scope="col">{"Field"}</th>
+                                <th scope="col">{"Val Dec"}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>{"Reference Point X Internal"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].refrence_point_x_internal}</td>
+                            </tr>
+                            <tr>
+                                <td>{"External X - Fractional Portion"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].refrence_point_x_external.get_fractional_portion()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"External X - Integer Portion"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].refrence_point_x_external.get_integer_portion()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"External X - Sign"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].refrence_point_x_external.get_sign()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Reference Point Y Internal"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].refrence_point_y_internal}</td>
+                            </tr>
+                            <tr>
+                                <td>{"External Y - Fractional Portion"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].refrence_point_y_external.get_fractional_portion()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"External Y - Integer Portion"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].refrence_point_y_external.get_integer_portion()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"External Y - Sign"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].refrence_point_y_external.get_sign()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Rot. A - Fractional"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].rotation_scaling_param_a.get_fractional_portion()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Rot. A - Integer Portion"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].rotation_scaling_param_a.get_integer_portion()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Rot. A - Sign"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].rotation_scaling_param_a.get_sign()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Rot. B - Fractional"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].rotation_scaling_param_b.get_fractional_portion()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Rot. B - Integer Portion"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].rotation_scaling_param_b.get_integer_portion()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Rot. B - Sign"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].rotation_scaling_param_b.get_sign()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Rot. C - Fractional"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].rotation_scaling_param_c.get_fractional_portion()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Rot. C - Integer Portion"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].rotation_scaling_param_c.get_integer_portion()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Rot. C - Sign"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].rotation_scaling_param_c.get_sign()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Rot. D - Fractional"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].rotation_scaling_param_d.get_fractional_portion()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Rot. D - Integer Portion"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].rotation_scaling_param_d.get_integer_portion()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Rot. D - Sign"}</td>
+                                <td>{self.props.gba.borrow().gpu.bg_affine_components[bg_number].rotation_scaling_param_d.get_sign()}</td>
                             </tr>
                             </tbody>
                         </table>
