@@ -44,6 +44,7 @@ impl IORegisters {
                 {self.view_interrupt_master_enable_register()}
                 {self.view_interrupt_enable_register()}
                 {self.view_interrupt_request_flags()}
+                {self.view_wait_state()}
             </div>
         }
     }

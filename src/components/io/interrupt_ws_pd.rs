@@ -5,6 +5,7 @@ pub trait InterruptWaitStatePowerDown {
     fn view_interrupt_master_enable_register(&self) -> Html;
     fn view_interrupt_enable_register(&self) -> Html;
     fn view_interrupt_request_flags(&self) -> Html;
+    fn view_wait_state(&self) -> Html;
 }
 
 impl InterruptWaitStatePowerDown for IORegisters {
@@ -205,6 +206,76 @@ impl InterruptWaitStatePowerDown for IORegisters {
                             <tr>
                                 <td>{"Game Pack"}</td>
                                 <td>{self.props.gba.borrow().interrupt_handler.if_interrupt.get_game_pack()}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+    fn view_wait_state(&self) -> Html {
+        html! {
+            <div class="card border-0">
+                <div class="card-header p-0 bg-transparent" id="wait-state-heading">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#wait-state"
+                                aria-expanded="true" aria-controls="wait-state">
+                            {"Wait State"}
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="wait-state" class="collapse" aria-labelledby="wait-state-heading">
+                    <div class="card-body">
+                        <table class="table register-table">
+                            <thead>
+                            <tr>
+                                <th scope="col">{"Field"}</th>
+                                <th scope="col">{"Val Dec"}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>{"SRAM Wait Control"}</td>
+                                <td>{self.props.gba.borrow().memory_bus.cycle_clock.wait_state_control.get_sram_wait_control()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Wait State 0 - 1st Access"}</td>
+                                <td>{self.props.gba.borrow().memory_bus.cycle_clock.wait_state_control.get_wait_state_zero_first_access()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Wait State 0 - 2nd Access"}</td>
+                                <td>{self.props.gba.borrow().memory_bus.cycle_clock.wait_state_control.get_wait_state_zero_second_access()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Wait State 1 - 1st Access"}</td>
+                                <td>{self.props.gba.borrow().memory_bus.cycle_clock.wait_state_control.get_wait_state_one_first_access()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Wait State 1 - 2nd Access"}</td>
+                                <td>{self.props.gba.borrow().memory_bus.cycle_clock.wait_state_control.get_wait_state_one_second_access()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Wait State 2 - 1st Access"}</td>
+                                <td>{self.props.gba.borrow().memory_bus.cycle_clock.wait_state_control.get_wait_state_two_first_access()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Wait State 2 - 2nd Access"}</td>
+                                <td>{self.props.gba.borrow().memory_bus.cycle_clock.wait_state_control.get_wait_state_two_second_access()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Phi Terminal Output"}</td>
+                                <td>{self.props.gba.borrow().memory_bus.cycle_clock.wait_state_control.get_phi_terminal_output()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Gamepak Prefetch Buffer"}</td>
+                                <td>{self.props.gba.borrow().memory_bus.cycle_clock.wait_state_control.get_gamepak_prefetch_buffer()}</td>
+                            </tr>
+                            <tr>
+                                <td>{"Gamepak Type Flag"}</td>
+                                <td>{self.props.gba.borrow().memory_bus.cycle_clock.wait_state_control.get_gamepak_type_flag()}</td>
                             </tr>
                             </tbody>
                         </table>
