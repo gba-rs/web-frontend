@@ -3,9 +3,15 @@ use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use yew::{html, Component, ComponentLink, InputData, Html, ShouldRender};
 use gba_emulator::gba::GBA;
 use gba_emulator::cpu::{cpu::InstructionSet, cpu::ARM_PC, cpu::THUMB_PC};
+use gba_emulator::gpu::{gpu::DISPLAY_HEIGHT, gpu::DISPLAY_WIDTH};
 use std::rc::Rc;
 use std::cell::RefCell;
 use log::{info, error};
+use std::f64;
+use wasm_bindgen::prelude::*;
+use wasm_bindgen::{JsCast, Clamped};
+use web_sys::ImageData;
+
 
 use crate::components::{
     registers::Registers,
@@ -26,6 +32,39 @@ struct DisassemblyElement {
     address: u32,
     instruction_hex: u32,
     instruction_asm: String,
+}
+
+// export a Rust function that uses the imported JS function
+#[wasm_bindgen]
+pub fn show_canvas(mut pixels: Vec<u8>) {
+    let document = web_sys::window().unwrap().document().unwrap();
+    let canvas = document.get_element_by_id("gba-canvas").unwrap();
+    let canvas: web_sys::HtmlCanvasElement = canvas
+        .dyn_into::<web_sys::HtmlCanvasElement>()
+        .map_err(|_| ())
+        .unwrap();
+    canvas.set_width(DISPLAY_WIDTH);
+    canvas.set_height(DISPLAY_HEIGHT);
+
+    let context = canvas
+        .get_context("2d")
+        .unwrap()
+        .unwrap()
+        .dyn_into::<web_sys::CanvasRenderingContext2d>()
+        .unwrap();
+
+    context.begin_path();
+
+    let mut img_data = ImageData::new_with_u8_clamped_array_and_sh(Clamped(&mut pixels), canvas.width(), canvas.height()).unwrap();
+    info!("{:?}", img_data.data().0);
+    context.put_image_data(&img_data, 0.0, 0.0 );
+    context.set_global_alpha(1.0);
+
+//    info!("{:?}", x.data().0);
+
+//    info!("{}", context.);
+//    info!("{:?}", data.0);
+//    info!("{:?}", data.0);
 }
 
 pub struct App {
@@ -151,6 +190,7 @@ impl Component for App {
                 true
             }
             Msg::Step(step_count) => {
+                show_canvas(convert_frame_to_u8(&self.gba.borrow().gpu.frame_buffer.clone()));
                 for _ in 0..step_count {
                     self.gba.as_ref().borrow_mut().single_step();
                 }
@@ -282,7 +322,7 @@ impl Component for App {
                 if self.follow_pc {
                     self.follow_pc_disassemble();
                 }
-
+                show_canvas(convert_frame_to_u8(&self.gba.borrow().gpu.frame_buffer));
                 true
             },
         }
@@ -334,6 +374,7 @@ impl Component for App {
                                 </div>
                                 <div class="col-9">
                                     <MemoryViewer gba={self.gba.clone()} min={self.mem_min} max={self.mem_max} initialized={self.initialized}/>
+                                    <div>{self.view_canvas()}</div>
                                 </div>
                             </div>
                         </div>
@@ -399,6 +440,15 @@ impl App {
                     </div>
                 </div>
                 <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::UpdateRange(RangeUpdate::DisassemblyMax)})>{"Search"}</button>
+            </>
+        }
+    }
+
+    pub fn view_canvas(&self) -> Html {
+        html! {
+            <>
+                <h5>{"The Canvas"}</h5>
+                <canvas id="gba-canvas"></canvas>
             </>
         }
     }
@@ -577,4 +627,15 @@ impl App {
             }
         }
     }
+}
+
+pub fn convert_frame_to_u8(vec: &Vec<u32>) -> Vec<u8> {
+    let mut new_vec: Vec<u8> = Vec::new();
+    for i in 0..vec.len() {
+        new_vec.push(((vec[i] & 0xFF_00_00) >> 16) as u8);
+        new_vec.push(((vec[i] & 0xFF_00) >> 8) as u8);
+        new_vec.push((vec[i] & 0xFF) as u8);
+        new_vec.push(0xFF as u8);
+    }
+    new_vec
 }
