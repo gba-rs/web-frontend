@@ -18,7 +18,10 @@ pub enum UpdateFlagType{
     Carry,
     Negative,
     SignedOverflow,
-    Zero
+    Zero,
+    FiqDisable,
+    IrqDisable,
+    StateBit
 }
 
 pub enum Msg {
@@ -38,6 +41,7 @@ impl Component for Cpsr {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         let flags = self.props.gba.borrow().cpu.cpsr.flags.clone();
+        let control_bits = self.props.gba.borrow().cpu.cpsr.control_bits.clone();
         match msg {
             Msg::UpdateFlag(flag_to_update) => {
                 match flag_to_update {
@@ -52,6 +56,15 @@ impl Component for Cpsr {
                     },
                     UpdateFlagType::Zero => {
                         self.props.gba.borrow_mut().cpu.cpsr.flags.zero = !flags.zero;
+                    },
+                    UpdateFlagType::FiqDisable => {
+                        self.props.gba.borrow_mut().cpu.cpsr.control_bits.fiq_disable = !control_bits.fiq_disable;
+                    },
+                    UpdateFlagType::IrqDisable => {
+                        self.props.gba.borrow_mut().cpu.cpsr.control_bits.irq_disable = !control_bits.irq_disable;
+                    },
+                    UpdateFlagType::StateBit => {
+                        self.props.gba.borrow_mut().cpu.cpsr.control_bits.state_bit = !control_bits.state_bit;
                     }
                 }
             }
@@ -66,6 +79,7 @@ impl Component for Cpsr {
 
     fn view(&self) -> Html {
         let flags = self.props.gba.borrow().cpu.cpsr.flags.clone();
+        let control_bits = self.props.gba.borrow().cpu.cpsr.control_bits.clone();
 
         html! {
             <div class="col-12">
@@ -103,6 +117,39 @@ impl Component for Cpsr {
                         <div class="input-group-text">
                             <input type="checkbox" checked={flags.zero} onclick=self.link.callback(|_|{Msg::UpdateFlag(UpdateFlagType::Zero)})/>
                         </div>
+                    </div>
+                </div>
+
+                <div class="input-group m-2">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text cpsr-text">{&format!("FIQ Disable - {:?}", control_bits.fiq_disable)}</span>
+                        <div class="input-group-text">
+                            <input type="checkbox" checked={control_bits.fiq_disable} onclick=self.link.callback(|_|{Msg::UpdateFlag(UpdateFlagType::FiqDisable)})/>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group m-2">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text cpsr-text">{&format!("IRQ Disable - {:?}", control_bits.irq_disable)}</span>
+                        <div class="input-group-text">
+                            <input type="checkbox" checked={control_bits.irq_disable} onclick=self.link.callback(|_|{Msg::UpdateFlag(UpdateFlagType::IrqDisable)})/>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group m-2">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text cpsr-text">{&format!("State Bit - {:?}", control_bits.state_bit)}</span>
+                        <div class="input-group-text">
+                            <input type="checkbox" checked={control_bits.state_bit} onclick=self.link.callback(|_|{Msg::UpdateFlag(UpdateFlagType::StateBit)})/>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group m-2">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text cpsr-text">{&format!("Mode Bits - {:b}", control_bits.mode_bits)}</span>
                     </div>
                 </div>
             </div>

@@ -161,7 +161,7 @@ impl InterruptWaitStatePowerDown for IORegisters {
                             </tr>
                             <tr>
                                 <td>{"LCD V Counter"}</td>
-                                <td>{self.props.gba.borrow().interrupt_handler.if_interrupt.get_lcd_v_counter_()}</td>
+                                <td>{self.props.gba.borrow().interrupt_handler.if_interrupt.get_lcd_v_counter()}</td>
                             </tr>
                             <tr>
                                 <td>{"Timer Zero Overflow"}</td>

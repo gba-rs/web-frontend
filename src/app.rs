@@ -2,6 +2,7 @@ use yew::prelude::*;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use yew::{html, Component, ComponentLink, InputData, Html, ShouldRender};
 use gba_emulator::gba::GBA;
+use gba_emulator::gamepak::GamePack;
 use gba_emulator::cpu::{cpu::InstructionSet, cpu::ARM_PC, cpu::THUMB_PC};
 use gba_emulator::gpu::{gpu::DISPLAY_HEIGHT, gpu::DISPLAY_WIDTH};
 use std::rc::Rc;
@@ -24,7 +25,7 @@ use crate::components::{
 
 use crate::logging;
 
-pub const START_PC: u32 = 0x08000000;
+pub const START_PC: u32 = 0;
 pub const FOLLOW_MIN: i64 = -10;
 pub const FOLLOW_MAX: i64 = 10;
 
@@ -53,18 +54,8 @@ pub fn show_canvas(mut pixels: Vec<u8>) {
         .dyn_into::<web_sys::CanvasRenderingContext2d>()
         .unwrap();
 
-    context.begin_path();
-
     let mut img_data = ImageData::new_with_u8_clamped_array_and_sh(Clamped(&mut pixels), canvas.width(), canvas.height()).unwrap();
-    info!("{:?}", img_data.data().0);
     context.put_image_data(&img_data, 0.0, 0.0 );
-    context.set_global_alpha(1.0);
-
-//    info!("{:?}", x.data().0);
-
-//    info!("{}", context.);
-//    info!("{:?}", data.0);
-//    info!("{:?}", data.0);
 }
 
 pub struct App {
@@ -76,6 +67,7 @@ pub struct App {
     bios_name: String,
     disassembly: Vec<DisassemblyElement>,
     gba: Rc<RefCell<GBA>>,
+    game_pack: GamePack,
     link: ComponentLink<App>,
     hex: bool,
     follow_pc: bool,
@@ -113,7 +105,7 @@ pub enum Msg {
     UpdateInputString(String, RangeUpdate),
     UpdateRunString(String),
     StartRun,
-    Frame,
+    Frame
 }
 
 #[derive(PartialEq)]
@@ -145,6 +137,7 @@ impl Component for App {
             bios_name: "Choose File".to_string(),
             disassembly: vec![],
             gba: Rc::new(RefCell::new(GBA::default())),
+            game_pack: GamePack::default(),
             tasks: vec![],
             hex: false,
             follow_pc: true,
@@ -166,20 +159,21 @@ impl Component for App {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::LoadedRom(file) => {
-                self.rom = file.content;
+                self.game_pack.rom = file.content;
                 self.rom_name = file.name;
                 self.disassembled = false;
                 self.initialized = false;
                 true
             }
             Msg::LoadedBios(file) => {
-                self.bios = file.content;
+                self.game_pack.bios = file.content;
                 self.bios_name = file.name;
                 self.initialized = false;
                 true
             }
             Msg::Init => {
-                self.gba = Rc::new(RefCell::new(GBA::new(START_PC, &self.bios, &self.rom)));
+                self.game_pack.backup_type = GamePack::detect_backup_type(&self.game_pack.rom);
+                self.gba = Rc::new(RefCell::new(GBA::new(START_PC, &self.game_pack)));
                 self.initialized = true;
                 info!("Created new Emulator");
 
@@ -190,7 +184,6 @@ impl Component for App {
                 true
             }
             Msg::Step(step_count) => {
-                show_canvas(convert_frame_to_u8(&self.gba.borrow().gpu.frame_buffer.clone()));
                 for _ in 0..step_count {
                     self.gba.as_ref().borrow_mut().single_step();
                 }
@@ -200,7 +193,17 @@ impl Component for App {
                 }
 
                 true
-            }
+            },
+            Msg::Frame => {
+                self.gba.borrow_mut().frame();
+                show_canvas(convert_frame_to_u8(&self.gba.borrow().gpu.frame_buffer));
+
+                if self.follow_pc {
+                    self.follow_pc_disassemble();
+                }
+
+                true
+            },
             Msg::UpdateRunString(value) => {
                 self.run_addr_str = value;
                 false
@@ -220,9 +223,11 @@ impl Component for App {
             }
             Msg::Run(address) => {
                 self.gba.borrow_mut().single_step();
-                let current_pc = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
-                if current_pc != address {
-                    self.link.send_message(Msg::Run(address));
+                let mut current_pc = if self.gba.borrow().cpu.get_instruction_set() == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
+                
+                while current_pc != address {
+                    self.gba.borrow_mut().single_step();
+                    current_pc = self.gba.borrow_mut().cpu.get_register_unsafe(15);
                 }
 
                 if self.follow_pc {
@@ -379,6 +384,10 @@ impl Component for App {
                             </div>
                         </div>
                     </div>
+                    <div class="row">
+                        {self.view_bg_palette()}
+                        {self.view_obj_palette()}
+                    </div>
                 </div>
             </>
         }
@@ -387,7 +396,7 @@ impl Component for App {
 
 impl App {
     pub fn view_disassembly(&self) -> Html {
-        let instruction_set = self.gba.borrow().cpu.current_instruction_set;
+        let instruction_set = self.gba.borrow().cpu.get_instruction_set();
         let current_pc_num = if instruction_set == InstructionSet::Arm { ARM_PC } else { THUMB_PC };
 
         if self.disassembled {
@@ -412,6 +421,49 @@ impl App {
             html! {
                 <div class="code-block">{"Run Disassembly"}</div>
             }
+        }
+    }
+
+    pub fn convert_rgb15_rgb24(value: u16) -> u32 {
+        let r = ((value & 0x1F) as u32) * 255 / 31;
+        let g = (((value >> 5) & 0x1F) as u32) * 255 / 31;
+        let b = (((value >> 10) & 0x1F) as u32) * 255 / 31;
+        (r << 16) | (g << 8) | (b)
+    }
+
+    pub fn view_bg_palette(&self) -> Html {
+        html! {
+            <div>
+                {for (0x500_0000u32..0x500_01FFu32).step_by(32).map(|val|{
+                    html! {
+                        <div style="line-height: 0">
+                            {for (0..32).step_by(2).map(|offset|{
+                                html!{
+                                    <div class="palette_block" style={format!("background: #{:06X};", App::convert_rgb15_rgb24(self.gba.borrow().memory_bus.mem_map.read_u16(val + offset)))}></div>
+                                }
+                            })}
+                        </div>
+                    }
+                })}
+            </div>
+        }
+    }
+
+    pub fn view_obj_palette(&self) -> Html {
+        html! {
+            <div>
+                {for (0x500_0200u32..0x500_03FFu32).step_by(32).map(|val|{
+                    html! {
+                        <div style="line-height: 0">
+                            {for (0..32).step_by(2).map(|offset|{
+                                html!{
+                                    <div class="palette_block" style={format!("background: #{:06X};", App::convert_rgb15_rgb24(self.gba.borrow().memory_bus.mem_map.read_u16(val + offset)))}></div>
+                                }
+                            })}
+                        </div>
+                    }
+                })}
+            </div>
         }
     }
 
@@ -556,8 +608,8 @@ impl App {
     fn follow_pc_disassemble(&mut self) {
         // Update the disassembly with the given pc follow range
         self.disassembly.clear();
-        let current_pc = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
-        let current_instruction_size = if self.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { 4 } else { 2 };
+        let current_pc = if self.gba.borrow().cpu.get_instruction_set() == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
+        let current_instruction_size = if self.gba.borrow().cpu.get_instruction_set() == InstructionSet::Arm { 4 } else { 2 };
 
         let mut address = current_pc as i64 + (FOLLOW_MIN * current_instruction_size);
         let total_bytes = (FOLLOW_MAX * current_instruction_size - FOLLOW_MIN * current_instruction_size) as u32;
@@ -571,7 +623,7 @@ impl App {
 
     fn disassemble(&mut self, address: u32, total_bytes: u32) {
         let memory_block = self.gba.borrow().memory_bus.mem_map.read_block(address as u32, total_bytes);
-        match self.gba.borrow().cpu.current_instruction_set {
+        match self.gba.borrow().cpu.get_instruction_set() {
             InstructionSet::Arm => {
                 for i in (0..memory_block.len()).step_by(4) {
                     let instruction: u32 = memory_block[i] as u32 |

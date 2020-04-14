@@ -102,15 +102,13 @@ body{
     min-width: 15em;
 }
 
-.io-reg {
-    overflow: scroll;
-    height: 800px;
-    font-size: 0.8rem;
+.palette_block {
+    display:inline-block; 
+    height: 16px; 
+    width: 16px;
+    margin: 0.05em
 }
 
-.io-reg .btn-link {
-    font-size: 0.8rem;
-}
 
 /*Utilities*/
 .text-center{
