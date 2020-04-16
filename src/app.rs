@@ -11,7 +11,7 @@ use log::{info, error};
 use std::f64;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::{JsCast, Clamped};
-use web_sys::ImageData;
+use web_sys::{ImageData, HtmlImageElement};
 
 
 use crate::components::{
@@ -54,8 +54,17 @@ pub fn show_canvas(mut pixels: Vec<u8>) {
         .dyn_into::<web_sys::CanvasRenderingContext2d>()
         .unwrap();
 
+    let mut img = document.get_element_by_id("gba-img").unwrap().dyn_into::<web_sys::HtmlImageElement>().unwrap();
     let mut img_data = ImageData::new_with_u8_clamped_array_and_sh(Clamped(&mut pixels), canvas.width(), canvas.height()).unwrap();
+    context.clear_rect(0.0, 0.0, canvas.width() as f64, canvas.height() as f64);
     context.put_image_data(&img_data, 0.0, 0.0 );
+    img.set_src(canvas.to_data_url().unwrap().as_str());
+
+    let scale = 3;
+    canvas.set_width(DISPLAY_WIDTH * scale);
+    canvas.set_height(DISPLAY_HEIGHT * scale);
+    context.scale(scale as f64, scale as f64);
+    context.draw_image_with_html_image_element(&img, 0.0, 0.0);
 }
 
 pub struct App {
@@ -112,6 +121,7 @@ pub enum Msg {
 pub enum ActiveMenu {
     Registers,
     IO,
+    Graphics,
 }
 
 impl Component for App {
@@ -346,6 +356,7 @@ impl Component for App {
                              <ul class="nav nav-tabs">
                                <li class="nav-item"><a class={format!("nav-link {}",self.is_menu_tab_active(ActiveMenu::Registers))} href="#" onclick=self.link.callback(|_|{Msg::ToggleMenu(ActiveMenu::Registers)})>{"Registers/Status"}</a></li>
                                <li class="nav-item"><a class={format!("nav-link {}",self.is_menu_tab_active(ActiveMenu::IO))} href="#" onclick=self.link.callback(|_|{Msg::ToggleMenu(ActiveMenu::IO)})>{"IO Registers"}</a></li>
+                               <li class="nav-item"><a class={format!("nav-link {}",self.is_menu_tab_active(ActiveMenu::Graphics))} href="#" onclick=self.link.callback(|_|{Msg::ToggleMenu(ActiveMenu::Graphics)})>{"Graphics"}</a></li>
                              </ul>
                              <div class={format!("row {}", self.is_menu_body_active(ActiveMenu::Registers))}>
                                  <div class="col-xs-12 col-lg-6 col-xl-6">
@@ -362,6 +373,23 @@ impl Component for App {
                                     <IORegisters hex={self.hex} gba={self.gba.clone()}/>
                                 </div>
                              </div>
+                             <div class={format!("row {}", self.is_menu_body_active(ActiveMenu::Graphics))}>
+                                <div class="col-xs-12 col-lg-12 col-xl-12 text-center">
+                                        {self.view_canvas()}
+                                </div>
+                             </div>
+                             <div class={format!("row {}", self.is_menu_body_active(ActiveMenu::Graphics))}>
+                                    <div class="col-xs-1 col-lg-1 col-xl-1"></div>
+                                    <div class="col-xs-5 col-lg-5 col-xl-5 text-center">
+                                        <h5>{"Background Palette"}</h5>
+                                        {self.view_bg_palette()}
+                                    </div>
+                                    <div class="col-xs-5 col-lg-5 col-xl-5 text-center">
+                                        <h5>{"Object Palette"}</h5>
+                                        {self.view_obj_palette()}
+                                    </div>
+                                    <div class="col-xs-1 col-lg-1 col-xl-1"></div>
+                            </div>
                          </div>
 
                         <div class="col-xs-12 col-xl-6">
@@ -379,14 +407,9 @@ impl Component for App {
                                 </div>
                                 <div class="col-9">
                                     <MemoryViewer gba={self.gba.clone()} min={self.mem_min} max={self.mem_max} initialized={self.initialized}/>
-                                    <div>{self.view_canvas()}</div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        {self.view_bg_palette()}
-                        {self.view_obj_palette()}
                     </div>
                 </div>
             </>
@@ -499,8 +522,8 @@ impl App {
     pub fn view_canvas(&self) -> Html {
         html! {
             <>
-                <h5>{"The Canvas"}</h5>
                 <canvas id="gba-canvas"></canvas>
+                <img id="gba-img" style="display:none;"></img>
             </>
         }
     }

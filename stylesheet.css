@@ -104,8 +104,8 @@ body{
 
 .palette_block {
     display:inline-block; 
-    height: 16px; 
-    width: 16px;
+    height: 15px;
+    width: 15px;
     margin: 0.05em
 }
 
