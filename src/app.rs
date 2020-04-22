@@ -35,6 +35,17 @@ struct DisassemblyElement {
     instruction_asm: String,
 }
 
+
+fn window() -> web_sys::Window {
+    web_sys::window().expect("no global `window` exists")
+}
+
+fn request_animation_frame(f: &Closure<dyn FnMut()>) {
+    window()
+        .request_animation_frame(f.as_ref().unchecked_ref())
+        .expect("should register `requestAnimationFrame` OK");
+}
+
 // export a Rust function that uses the imported JS function
 #[wasm_bindgen]
 pub fn show_canvas(mut pixels: Vec<u8>) {
@@ -66,6 +77,13 @@ pub fn show_canvas(mut pixels: Vec<u8>) {
     context.scale(scale as f64, scale as f64);
     context.draw_image_with_html_image_element(&img, 0.0, 0.0);
 }
+
+//#[wasm_bindgen]
+//pub fn go() {
+//
+//}
+
+
 
 pub struct App {
     reader: ReaderService,
@@ -114,7 +132,8 @@ pub enum Msg {
     UpdateInputString(String, RangeUpdate),
     UpdateRunString(String),
     StartRun,
-    Frame
+    Frame,
+    Go,
 }
 
 #[derive(PartialEq)]
@@ -234,7 +253,7 @@ impl Component for App {
             Msg::Run(address) => {
                 self.gba.borrow_mut().single_step();
                 let mut current_pc = if self.gba.borrow().cpu.get_instruction_set() == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
-                
+
                 while current_pc != address {
                     self.gba.borrow_mut().single_step();
                     current_pc = self.gba.borrow_mut().cpu.get_register_unsafe(15);
@@ -338,6 +357,40 @@ impl Component for App {
                     self.follow_pc_disassemble();
                 }
                 show_canvas(convert_frame_to_u8(&self.gba.borrow().gpu.frame_buffer));
+                true
+            },
+            Msg::Go => {
+
+                let f = Rc::new(RefCell::new(None));
+                let g = f.clone();
+
+                let mut i = 0;
+                *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
+                    if i > 300 {
+                        info!("{}", "ALL DONE");
+
+                        // Drop our handle to this closure so that it will get cleaned
+                        // up once we return.
+                        let _ = f.borrow_mut().take();
+                        return;
+                    }
+
+                    i += 1;
+                    info!("RUNNING {}", i);
+                    self.gba.borrow_mut().frame();
+                    show_canvas(convert_frame_to_u8(&self.gba.borrow().gpu.frame_buffer));
+
+                    // Schedule ourself for another requestAnimationFrame callback.
+                    request_animation_frame(f.borrow().as_ref().unwrap());
+                }) as Box<dyn FnMut()>));
+
+                request_animation_frame(g.borrow().as_ref().unwrap());
+//                self.gba.borrow_mut().frame();
+//
+//                if self.follow_pc {
+//                    self.follow_pc_disassemble();
+//                }
+//                show_canvas(convert_frame_to_u8(&self.gba.borrow().gpu.frame_buffer));
                 true
             },
         }
@@ -598,6 +651,7 @@ impl App {
                         <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Init})>{"Init Emulator"}</button>
                         <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Step(1)})>{"Step"}</button>
                         <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Frame})>{"Frame"}</button>
+                        <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Go})>{"Run"}</button>
                     </div>
                 </div>
 
