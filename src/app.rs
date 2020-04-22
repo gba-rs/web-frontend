@@ -28,6 +28,7 @@ use crate::logging;
 pub const START_PC: u32 = 0;
 pub const FOLLOW_MIN: i64 = -10;
 pub const FOLLOW_MAX: i64 = 10;
+pub static mut go: bool = false;
 
 struct DisassemblyElement {
     address: u32,
@@ -46,9 +47,51 @@ fn request_animation_frame(f: &Closure<dyn FnMut()>) {
         .expect("should register `requestAnimationFrame` OK");
 }
 
-// export a Rust function that uses the imported JS function
 #[wasm_bindgen]
 pub fn show_canvas(mut pixels: Vec<u8>) {
+    let document = web_sys::window().unwrap().document().unwrap();
+    let canvas = document.get_element_by_id("gba-canvas").unwrap();
+    let canvas: web_sys::HtmlCanvasElement = canvas
+        .dyn_into::<web_sys::HtmlCanvasElement>()
+        .map_err(|_| ())
+        .unwrap();
+    canvas.set_width(DISPLAY_WIDTH);
+    canvas.set_height(DISPLAY_HEIGHT);
+
+    // TODO method that takes cavnas id to return tuple of canvas and context
+    let context = canvas
+        .get_context("2d")
+        .unwrap()
+        .unwrap()
+        .dyn_into::<web_sys::CanvasRenderingContext2d>()
+        .unwrap();
+
+    let canvas2 = document.get_element_by_id("gba-canvas2").unwrap();
+    let canvas2: web_sys::HtmlCanvasElement = canvas2
+        .dyn_into::<web_sys::HtmlCanvasElement>()
+        .map_err(|_| ())
+        .unwrap();
+    canvas2.set_width(DISPLAY_WIDTH);
+    canvas2.set_height(DISPLAY_HEIGHT);
+    let context2 = canvas2
+        .get_context("2d")
+        .unwrap()
+        .unwrap()
+        .dyn_into::<web_sys::CanvasRenderingContext2d>()
+        .unwrap();
+
+    let mut img_data = ImageData::new_with_u8_clamped_array_and_sh(Clamped(&mut pixels), canvas.width(), canvas.height()).unwrap();
+    context2.put_image_data(&img_data, 0.0, 0.0 );
+
+    let scale = 3;
+    canvas.set_width(DISPLAY_WIDTH * scale);
+    canvas.set_height(DISPLAY_HEIGHT * scale);
+    context.clear_rect(0.0, 0.0, canvas.width() as f64, canvas.height() as f64);
+    context.draw_image_with_html_canvas_element_and_dw_and_dh(&canvas2, 0.0, 0.0, (DISPLAY_WIDTH * scale) as f64, (DISPLAY_HEIGHT * scale) as f64);
+}
+
+#[wasm_bindgen]
+pub fn clear_canvas() {
     let document = web_sys::window().unwrap().document().unwrap();
     let canvas = document.get_element_by_id("gba-canvas").unwrap();
     let canvas: web_sys::HtmlCanvasElement = canvas
@@ -65,25 +108,8 @@ pub fn show_canvas(mut pixels: Vec<u8>) {
         .dyn_into::<web_sys::CanvasRenderingContext2d>()
         .unwrap();
 
-    let mut img = document.get_element_by_id("gba-img").unwrap().dyn_into::<web_sys::HtmlImageElement>().unwrap();
-    let mut img_data = ImageData::new_with_u8_clamped_array_and_sh(Clamped(&mut pixels), canvas.width(), canvas.height()).unwrap();
     context.clear_rect(0.0, 0.0, canvas.width() as f64, canvas.height() as f64);
-    context.put_image_data(&img_data, 0.0, 0.0 );
-    img.set_src(canvas.to_data_url().unwrap().as_str());
-
-    let scale = 3;
-    canvas.set_width(DISPLAY_WIDTH * scale);
-    canvas.set_height(DISPLAY_HEIGHT * scale);
-    context.scale(scale as f64, scale as f64);
-    context.draw_image_with_html_image_element(&img, 0.0, 0.0);
 }
-
-//#[wasm_bindgen]
-//pub fn go() {
-//
-//}
-
-
 
 pub struct App {
     reader: ReaderService,
@@ -110,6 +136,7 @@ pub struct App {
     mem_max_str: String,
     run_addr_str: String,
     active_menu: ActiveMenu,
+    go: bool,
 }
 
 pub enum RangeUpdate {
@@ -134,6 +161,7 @@ pub enum Msg {
     StartRun,
     Frame,
     Go,
+    Stop,
 }
 
 #[derive(PartialEq)]
@@ -182,6 +210,7 @@ impl Component for App {
             mem_max_str: "".to_string(),
             run_addr_str: "".to_string(),
             active_menu: ActiveMenu::Registers,
+            go: false,
         }
     }
 
@@ -204,6 +233,7 @@ impl Component for App {
                 self.game_pack.backup_type = GamePack::detect_backup_type(&self.game_pack.rom);
                 self.gba = Rc::new(RefCell::new(GBA::new(START_PC, &self.game_pack)));
                 self.initialized = true;
+                clear_canvas();
                 info!("Created new Emulator");
 
                 if self.follow_pc {
@@ -349,48 +379,37 @@ impl Component for App {
             Msg::ToggleMenu(menu_item) => {
                 self.active_menu = menu_item;
                 true
-            }
-            Msg::Frame => {
-                self.gba.borrow_mut().frame();
+            },
+            Msg::Go => {
+                unsafe {
+                    go = true;
 
+                    let gba_clone = self.gba.clone();
+                    let f = Rc::new(RefCell::new(None));
+                    let g = f.clone();
+
+                    *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
+                        if !go {
+                            let _ = f.borrow_mut().take();
+                            return;
+                        }
+                        gba_clone.borrow_mut().frame();
+                        show_canvas(convert_frame_to_u8(&gba_clone.borrow().gpu.frame_buffer));
+
+                        request_animation_frame(f.borrow().as_ref().unwrap());
+                    }) as Box<dyn FnMut()>));
+
+                    request_animation_frame(g.borrow().as_ref().unwrap());
+                }
+                true
+            },
+            Msg::Stop => {
+                unsafe {
+                    go = false;
+                }
                 if self.follow_pc {
                     self.follow_pc_disassemble();
                 }
-                show_canvas(convert_frame_to_u8(&self.gba.borrow().gpu.frame_buffer));
-                true
-            },
-            Msg::Go => {
-
-                let f = Rc::new(RefCell::new(None));
-                let g = f.clone();
-
-                let mut i = 0;
-                *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
-                    if i > 300 {
-                        info!("{}", "ALL DONE");
-
-                        // Drop our handle to this closure so that it will get cleaned
-                        // up once we return.
-                        let _ = f.borrow_mut().take();
-                        return;
-                    }
-
-                    i += 1;
-                    info!("RUNNING {}", i);
-                    self.gba.borrow_mut().frame();
-                    show_canvas(convert_frame_to_u8(&self.gba.borrow().gpu.frame_buffer));
-
-                    // Schedule ourself for another requestAnimationFrame callback.
-                    request_animation_frame(f.borrow().as_ref().unwrap());
-                }) as Box<dyn FnMut()>));
-
-                request_animation_frame(g.borrow().as_ref().unwrap());
-//                self.gba.borrow_mut().frame();
-//
-//                if self.follow_pc {
-//                    self.follow_pc_disassemble();
-//                }
-//                show_canvas(convert_frame_to_u8(&self.gba.borrow().gpu.frame_buffer));
                 true
             },
         }
@@ -576,7 +595,7 @@ impl App {
         html! {
             <>
                 <canvas id="gba-canvas"></canvas>
-                <img id="gba-img" style="display:none;"></img>
+                <canvas id="gba-canvas2" style="display:none;"></canvas>
             </>
         }
     }
@@ -651,7 +670,8 @@ impl App {
                         <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Init})>{"Init Emulator"}</button>
                         <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Step(1)})>{"Step"}</button>
                         <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Frame})>{"Frame"}</button>
-                        <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Go})>{"Run"}</button>
+                        <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Go})>{"Go"}</button>
+                        <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Stop})>{"Stop"}</button>
                     </div>
                 </div>
 
