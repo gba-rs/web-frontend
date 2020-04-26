@@ -1,18 +1,21 @@
-use yew::prelude::*;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use yew::{html, Component, ComponentLink, InputData, Html, ShouldRender};
-use gba_emulator::gba::GBA;
-use gba_emulator::gamepak::GamePack;
-use gba_emulator::cpu::{cpu::InstructionSet, cpu::ARM_PC, cpu::THUMB_PC};
-use gba_emulator::gpu::{gpu::DISPLAY_HEIGHT, gpu::DISPLAY_WIDTH};
+
+use gba_emulator::{
+    gba::GBA,
+    gamepak::GamePack,
+    cpu::{
+        cpu::InstructionSet,
+        cpu::ARM_PC,
+        cpu::THUMB_PC
+    },
+};
+
 use std::rc::Rc;
 use std::cell::RefCell;
 use log::{info, error};
-use std::f64;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen::{JsCast, Clamped};
-use web_sys::{ImageData, HtmlImageElement};
-
+use wasm_bindgen::JsCast;
 
 use crate::components::{
     registers::Registers,
@@ -20,139 +23,62 @@ use crate::components::{
     cpsr::Cpsr,
     status::Status,
     memory_viewer::MemoryViewer,
-    io_reg::IORegisters
+    io_reg::IORegisters,
+    disassembler::DisassemblyElement,
+    canvas::*,
 };
 
 use crate::logging;
 
 pub const START_PC: u32 = 0;
-pub const FOLLOW_MIN: i64 = -10;
-pub const FOLLOW_MAX: i64 = 10;
-pub static mut go: bool = false;
-
-struct DisassemblyElement {
-    address: u32,
-    instruction_hex: u32,
-    instruction_asm: String,
-}
-
-
-fn window() -> web_sys::Window {
-    web_sys::window().expect("no global `window` exists")
-}
-
-fn request_animation_frame(f: &Closure<dyn FnMut()>) {
-    window()
-        .request_animation_frame(f.as_ref().unchecked_ref())
-        .expect("should register `requestAnimationFrame` OK");
-}
-
-#[wasm_bindgen]
-pub fn show_canvas(mut pixels: Vec<u8>) {
-    let document = web_sys::window().unwrap().document().unwrap();
-    let canvas = document.get_element_by_id("gba-canvas").unwrap();
-    let canvas: web_sys::HtmlCanvasElement = canvas
-        .dyn_into::<web_sys::HtmlCanvasElement>()
-        .map_err(|_| ())
-        .unwrap();
-    canvas.set_width(DISPLAY_WIDTH);
-    canvas.set_height(DISPLAY_HEIGHT);
-
-    // TODO method that takes cavnas id to return tuple of canvas and context
-    let context = canvas
-        .get_context("2d")
-        .unwrap()
-        .unwrap()
-        .dyn_into::<web_sys::CanvasRenderingContext2d>()
-        .unwrap();
-
-    let canvas2 = document.get_element_by_id("gba-canvas2").unwrap();
-    let canvas2: web_sys::HtmlCanvasElement = canvas2
-        .dyn_into::<web_sys::HtmlCanvasElement>()
-        .map_err(|_| ())
-        .unwrap();
-    canvas2.set_width(DISPLAY_WIDTH);
-    canvas2.set_height(DISPLAY_HEIGHT);
-    let context2 = canvas2
-        .get_context("2d")
-        .unwrap()
-        .unwrap()
-        .dyn_into::<web_sys::CanvasRenderingContext2d>()
-        .unwrap();
-
-    let mut img_data = ImageData::new_with_u8_clamped_array_and_sh(Clamped(&mut pixels), canvas.width(), canvas.height()).unwrap();
-    context2.put_image_data(&img_data, 0.0, 0.0 );
-
-    let scale = 3;
-    canvas.set_width(DISPLAY_WIDTH * scale);
-    canvas.set_height(DISPLAY_HEIGHT * scale);
-    context.clear_rect(0.0, 0.0, canvas.width() as f64, canvas.height() as f64);
-    context.draw_image_with_html_canvas_element_and_dw_and_dh(&canvas2, 0.0, 0.0, (DISPLAY_WIDTH * scale) as f64, (DISPLAY_HEIGHT * scale) as f64);
-}
-
-#[wasm_bindgen]
-pub fn clear_canvas() {
-    let document = web_sys::window().unwrap().document().unwrap();
-    let canvas = document.get_element_by_id("gba-canvas").unwrap();
-    let canvas: web_sys::HtmlCanvasElement = canvas
-        .dyn_into::<web_sys::HtmlCanvasElement>()
-        .map_err(|_| ())
-        .unwrap();
-    canvas.set_width(DISPLAY_WIDTH);
-    canvas.set_height(DISPLAY_HEIGHT);
-
-    let context = canvas
-        .get_context("2d")
-        .unwrap()
-        .unwrap()
-        .dyn_into::<web_sys::CanvasRenderingContext2d>()
-        .unwrap();
-
-    context.clear_rect(0.0, 0.0, canvas.width() as f64, canvas.height() as f64);
-}
+pub static mut GO: bool = false;
 
 pub struct App {
-    reader: ReaderService,
-    tasks: Vec<ReaderTask>,
-    rom: Vec<u8>,
-    bios: Vec<u8>,
-    rom_name: String,
-    bios_name: String,
-    disassembly: Vec<DisassemblyElement>,
-    gba: Rc<RefCell<GBA>>,
-    game_pack: GamePack,
-    link: ComponentLink<App>,
-    hex: bool,
-    follow_pc: bool,
-    initialized: bool,
-    disassembled: bool,
-    dis_min: u32,
-    dis_max: u32,
-    mem_min: u32,
-    mem_max: u32,
-    dis_min_str: String,
-    dis_max_str: String,
-    mem_min_str: String,
-    mem_max_str: String,
-    run_addr_str: String,
-    active_menu: ActiveMenu,
-    go: bool,
+    pub reader: ReaderService,
+    pub tasks: Vec<ReaderTask>,
+    pub rom_name: String,
+    pub bios_name: String,
+    pub save_name: String,
+    pub save: Vec<u8>,
+    pub disassembly: Vec<DisassemblyElement>,
+    pub gba: Rc<RefCell<GBA>>,
+    pub game_pack: GamePack,
+    pub link: ComponentLink<App>,
+    pub hex: bool,
+    pub follow_pc: bool,
+    pub initialized: bool,
+    pub disassembled: bool,
+    pub dis_min: u32,
+    pub dis_max: u32,
+    pub mem_min: u32,
+    pub mem_max: u32,
+    pub dis_min_str: String,
+    pub dis_max_str: String,
+    pub mem_min_str: String,
+    pub mem_max_str: String,
+    pub run_addr_str: String,
+    pub active_menu: ActiveMenu,
 }
 
 pub enum RangeUpdate {
-    MemoryViewerMin,
-    MemoryViewerMax,
     DisassemblyMin,
     DisassemblyMax,
+}
+
+pub enum FileLoadType {
+    Rom,
+    Bios,
+    Save
 }
 
 pub enum Msg {
     LoadedRom(FileData),
     LoadedBios(FileData),
+    LoadedSave(FileData),
     Init,
     Step(u8),
     Run(u32),
-    Files(Vec<File>, bool),
+    Files(Vec<File>, FileLoadType),
     ToggleFollow,
     ToggleMenu(ActiveMenu),
     UpdateRange(RangeUpdate),
@@ -184,14 +110,15 @@ impl Component for App {
                 info!("Logger failed to initialize");
             }
         }
+
         info!("Created Application");
         App {
             reader: ReaderService::new(),
             link,
-            bios: vec![],
-            rom: vec![],
             rom_name: "Choose File".to_string(),
             bios_name: "Choose File".to_string(),
+            save_name: "Choose File (Optional)".to_string(),
+            save: vec![],
             disassembly: vec![],
             gba: Rc::new(RefCell::new(GBA::default())),
             game_pack: GamePack::default(),
@@ -210,7 +137,6 @@ impl Component for App {
             mem_max_str: "".to_string(),
             run_addr_str: "".to_string(),
             active_menu: ActiveMenu::Registers,
-            go: false,
         }
     }
 
@@ -229,9 +155,17 @@ impl Component for App {
                 self.initialized = false;
                 true
             }
+            Msg::LoadedSave(file) => {
+                self.save = file.content;
+                self.save_name = file.name;
+                true
+            }
             Msg::Init => {
                 self.game_pack.backup_type = GamePack::detect_backup_type(&self.game_pack.rom);
                 self.gba = Rc::new(RefCell::new(GBA::new(START_PC, &self.game_pack)));
+                if self.save.len() != 0 {
+                    self.gba.borrow_mut().load_save_file(&self.save);
+                }
                 self.initialized = true;
                 clear_canvas();
                 info!("Created new Emulator");
@@ -239,6 +173,59 @@ impl Component for App {
                 if self.follow_pc {
                     self.follow_pc_disassemble();
                 }
+
+                self.gba.borrow_mut().key_status.set_register(0xFFFF);
+
+                // need 2 because we move the clone into the closure
+                let key_down_clone = self.gba.clone();
+                let key_up_clone = self.gba.clone();
+
+                log::info!("Setup key bindings");
+                let key_down = Closure::wrap(Box::new(move |event: web_sys::KeyboardEvent| {
+                    unsafe {
+                        if GO {
+                            match event.key_code() {
+                                web_sys::KeyEvent::DOM_VK_W => key_down_clone.borrow_mut().key_status.set_dpad_up(0),
+                                web_sys::KeyEvent::DOM_VK_S => key_down_clone.borrow_mut().key_status.set_dpad_down(0),
+                                web_sys::KeyEvent::DOM_VK_A => key_down_clone.borrow_mut().key_status.set_dpad_left(0),
+                                web_sys::KeyEvent::DOM_VK_D => key_down_clone.borrow_mut().key_status.set_dpad_right(0),
+                                web_sys::KeyEvent::DOM_VK_H => key_down_clone.borrow_mut().key_status.set_button_a(0),
+                                web_sys::KeyEvent::DOM_VK_J => key_down_clone.borrow_mut().key_status.set_button_b(0),
+                                web_sys::KeyEvent::DOM_VK_R => key_down_clone.borrow_mut().key_status.set_button_r(0),
+                                web_sys::KeyEvent::DOM_VK_Q => key_down_clone.borrow_mut().key_status.set_button_l(0),
+                                web_sys::KeyEvent::DOM_VK_BACK_SPACE => key_down_clone.borrow_mut().key_status.set_button_select(0),
+                                web_sys::KeyEvent::DOM_VK_RETURN => key_down_clone.borrow_mut().key_status.set_button_start(0),
+                                _ => {}
+                            }
+                        }
+                    }
+                }) as Box<dyn FnMut(_)>);
+
+                let key_up = Closure::wrap(Box::new(move |event: web_sys::KeyboardEvent| {
+                    unsafe {
+                        if GO {
+                            match event.key_code() {
+                                web_sys::KeyEvent::DOM_VK_W => key_up_clone.borrow_mut().key_status.set_dpad_up(1),
+                                web_sys::KeyEvent::DOM_VK_S => key_up_clone.borrow_mut().key_status.set_dpad_down(1),
+                                web_sys::KeyEvent::DOM_VK_A => key_up_clone.borrow_mut().key_status.set_dpad_left(1),
+                                web_sys::KeyEvent::DOM_VK_D => key_up_clone.borrow_mut().key_status.set_dpad_right(1),
+                                web_sys::KeyEvent::DOM_VK_H => key_up_clone.borrow_mut().key_status.set_button_a(1),
+                                web_sys::KeyEvent::DOM_VK_J => key_up_clone.borrow_mut().key_status.set_button_b(1),
+                                web_sys::KeyEvent::DOM_VK_R => key_up_clone.borrow_mut().key_status.set_button_r(1),
+                                web_sys::KeyEvent::DOM_VK_Q => key_up_clone.borrow_mut().key_status.set_button_l(1),
+                                web_sys::KeyEvent::DOM_VK_BACK_SPACE => key_up_clone.borrow_mut().key_status.set_button_select(1),
+                                web_sys::KeyEvent::DOM_VK_RETURN => key_up_clone.borrow_mut().key_status.set_button_start(1),
+                                _ => {}
+                            }
+                        }
+                    }
+                }) as Box<dyn FnMut(_)>);
+        
+                window().set_onkeydown(Some(key_down.as_ref().unchecked_ref()));
+                window().set_onkeyup(Some(key_up.as_ref().unchecked_ref()));
+
+                key_down.forget();
+                key_up.forget();
 
                 true
             }
@@ -301,23 +288,6 @@ impl Component for App {
             }
             Msg::UpdateRange(range_to_update) => {
                 match range_to_update {
-                    RangeUpdate::MemoryViewerMin | RangeUpdate::MemoryViewerMax => {
-                        let result = u32::from_str_radix(&self.mem_max_str, 16);//self.mem_max_str.parse::<u32>();
-                        match result {
-                            Ok(val) => {
-                                self.mem_max = val;
-                            }
-                            Err(_) => {}
-                        }
-
-                        let result = u32::from_str_radix(&self.mem_min_str, 16);
-                        match result {
-                            Ok(val) => {
-                                self.mem_min = val;
-                            }
-                            Err(_) => {}
-                        }
-                    }
                     RangeUpdate::DisassemblyMin | RangeUpdate::DisassemblyMax => {
                         let result = u32::from_str_radix(&self.dis_max_str, 16);
                         match result {
@@ -346,12 +316,6 @@ impl Component for App {
             }
             Msg::UpdateInputString(val, range_to_update) => {
                 match range_to_update {
-                    RangeUpdate::MemoryViewerMin => {
-                        self.mem_min_str = val;
-                    }
-                    RangeUpdate::MemoryViewerMax => {
-                        self.mem_max_str = val;
-                    }
                     RangeUpdate::DisassemblyMin => {
                         self.dis_min_str = val;
                     }
@@ -361,15 +325,22 @@ impl Component for App {
                 }
                 false
             }
-            Msg::Files(files, rom) => {
+            Msg::Files(files, file_type) => {
                 for file in files.into_iter() {
                     let task_result = {
-                        if rom {
-                            let callback = self.link.callback(Msg::LoadedRom);
-                            self.reader.read_file(file, callback)
-                        } else {
-                            let callback = self.link.callback(Msg::LoadedBios);
-                            self.reader.read_file(file, callback)
+                        match file_type {
+                            FileLoadType::Rom => {
+                                let callback = self.link.callback(Msg::LoadedRom);
+                                self.reader.read_file(file, callback)
+                            },
+                            FileLoadType::Bios => {
+                                let callback = self.link.callback(Msg::LoadedBios);
+                                self.reader.read_file(file, callback)
+                            },
+                            FileLoadType::Save => {
+                                let callback = self.link.callback(Msg::LoadedSave);
+                                self.reader.read_file(file, callback)
+                            }
                         }
                     };
                     self.tasks.push(task_result.unwrap());
@@ -382,30 +353,33 @@ impl Component for App {
             },
             Msg::Go => {
                 unsafe {
-                    go = true;
+                    GO = true;
+                }
 
-                    let gba_clone = self.gba.clone();
-                    let f = Rc::new(RefCell::new(None));
-                    let g = f.clone();
+                let gba_clone = self.gba.clone();
+                let f = Rc::new(RefCell::new(None));
+                let g = f.clone();
 
-                    *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
-                        if !go {
+                *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
+                    unsafe {    
+                        if !GO {
                             let _ = f.borrow_mut().take();
                             return;
                         }
-                        gba_clone.borrow_mut().frame();
-                        show_canvas(convert_frame_to_u8(&gba_clone.borrow().gpu.frame_buffer));
+                    }
+                    gba_clone.borrow_mut().frame();
+                    gba_clone.borrow_mut().key_status.set_register(0xFFFF);
+                    show_canvas(convert_frame_to_u8(&gba_clone.borrow().gpu.frame_buffer));
 
-                        request_animation_frame(f.borrow().as_ref().unwrap());
-                    }) as Box<dyn FnMut()>));
+                    request_animation_frame(f.borrow().as_ref().unwrap());
+                }) as Box<dyn FnMut()>));
 
-                    request_animation_frame(g.borrow().as_ref().unwrap());
-                }
+                request_animation_frame(g.borrow().as_ref().unwrap());
                 true
             },
             Msg::Stop => {
                 unsafe {
-                    go = false;
+                    GO = false;
                 }
                 if self.follow_pc {
                     self.follow_pc_disassemble();
@@ -473,14 +447,7 @@ impl Component for App {
                                     {self.view_disassembly()}
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-3">
-                                    {self.view_range_mem()}
-                                </div>
-                                <div class="col-9">
-                                    <MemoryViewer gba={self.gba.clone()} min={self.mem_min} max={self.mem_max} initialized={self.initialized}/>
-                                </div>
-                            </div>
+                            <MemoryViewer gba={self.gba.clone()} initialized={self.initialized}/>
                         </div>
                     </div>
                 </div>
@@ -490,78 +457,6 @@ impl Component for App {
 }
 
 impl App {
-    pub fn view_disassembly(&self) -> Html {
-        let instruction_set = self.gba.borrow().cpu.get_instruction_set();
-        let current_pc_num = if instruction_set == InstructionSet::Arm { ARM_PC } else { THUMB_PC };
-
-        if self.disassembled {
-            let current_pc = self.gba.borrow().cpu.get_register(current_pc_num);
-
-            html! {
-                <div class="code-block">
-                    {for (0..self.disassembly.len()).map(|val|{
-                        let element = &self.disassembly[val as usize];
-
-                        html! {
-                            <div class={if self.disassembly[val as usize].address == current_pc {"disassembly-selected"} else {""}}>
-                                <span class="disassembly-address">{format!("{:08X}", element.address)}</span>
-                                <span class="disassembly-hex">{format!("{:08X}", element.instruction_hex)}</span>
-                                <span class="disassembly-asm">{format!("{}", element.instruction_asm)}</span>
-                            </div>
-                        }
-                    })}
-                </div>
-            }
-        } else {
-            html! {
-                <div class="code-block">{"Run Disassembly"}</div>
-            }
-        }
-    }
-
-    pub fn convert_rgb15_rgb24(value: u16) -> u32 {
-        let r = ((value & 0x1F) as u32) * 255 / 31;
-        let g = (((value >> 5) & 0x1F) as u32) * 255 / 31;
-        let b = (((value >> 10) & 0x1F) as u32) * 255 / 31;
-        (r << 16) | (g << 8) | (b)
-    }
-
-    pub fn view_bg_palette(&self) -> Html {
-        html! {
-            <div>
-                {for (0x500_0000u32..0x500_01FFu32).step_by(32).map(|val|{
-                    html! {
-                        <div style="line-height: 0">
-                            {for (0..32).step_by(2).map(|offset|{
-                                html!{
-                                    <div class="palette_block" style={format!("background: #{:06X};", App::convert_rgb15_rgb24(self.gba.borrow().memory_bus.mem_map.read_u16(val + offset)))}></div>
-                                }
-                            })}
-                        </div>
-                    }
-                })}
-            </div>
-        }
-    }
-
-    pub fn view_obj_palette(&self) -> Html {
-        html! {
-            <div>
-                {for (0x500_0200u32..0x500_03FFu32).step_by(32).map(|val|{
-                    html! {
-                        <div style="line-height: 0">
-                            {for (0..32).step_by(2).map(|offset|{
-                                html!{
-                                    <div class="palette_block" style={format!("background: #{:06X};", App::convert_rgb15_rgb24(self.gba.borrow().memory_bus.mem_map.read_u16(val + offset)))}></div>
-                                }
-                            })}
-                        </div>
-                    }
-                })}
-            </div>
-        }
-    }
-
     pub fn view_range_dis(&self) -> Html {
         html! {
             <>
@@ -591,102 +486,6 @@ impl App {
         }
     }
 
-    pub fn view_canvas(&self) -> Html {
-        html! {
-            <>
-                <canvas id="gba-canvas"></canvas>
-                <canvas id="gba-canvas2" style="display:none;"></canvas>
-            </>
-        }
-    }
-
-    pub fn view_range_mem(&self) -> Html {
-        html! {
-            <>
-                <h5>{"Memory"}</h5>
-                <div class="input-group input-group-sm mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text" id="lower-addon-mem">{"Lower"}</span>
-                    </div>
-                    <input type="text" class="form-control" placeholder="0" oninput=self.link.callback(|e: InputData| {Msg::UpdateInputString(e.value, RangeUpdate::MemoryViewerMin)})/>
-                </div>
-                <div class="input-group input-group-sm mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text" id="upper-addon-mem">{"Upper"}</span>
-                    </div>
-                    <input type="text" class="form-control" placeholder="100" oninput=self.link.callback(|e: InputData| {Msg::UpdateInputString(e.value, RangeUpdate::MemoryViewerMax)})/>
-                </div>
-                <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::UpdateRange(RangeUpdate::MemoryViewerMax)})>{"Search"}</button>
-            </>
-        }
-    }
-
-    pub fn view_control(&self) -> Html {
-        html! {
-            <>
-                // <h4>{"Control"}</h4>
-                <div class="col-xs-12 col-md-6 col-xl-3">                               
-                    <div class="input-group mb-3">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text" id="inputGroupFileAddon01">{"Bios"}</span>
-                        </div>
-                        <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="inputGroupFile01" aria-describedby="inputGroupFileAddon01" onchange=self.link.callback(move |value| {
-                                let mut result = Vec::new();
-                                if let ChangeData::Files(files) = value {
-                                    for x in 0..files.length() {
-                                        result.push(files.get(x).unwrap())
-                                    }
-                                }
-                                Msg::Files(result, false)
-                            })/>
-                            <label class="custom-file-label" for="inputGroupFile01">{format!("{}", self.bios_name)}</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xs-12 col-md-6 col-xl-3">                               
-                    <div class="input-group mb-3">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text" id="inputGroupFileAddon02">{"Rom"}</span>
-                        </div>
-                        <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="inputGroupFile02" aria-describedby="inputGroupFileAddon02" onchange=self.link.callback(|value| {
-                                let mut result = Vec::new();
-                                if let ChangeData::Files(files) = value {
-                                    for x in 0..files.length() {
-                                        result.push(files.get(x).unwrap())
-                                    }
-                                }
-                                Msg::Files(result, true)
-                            })/>
-                            <label class="custom-file-label" for="inputGroupFile02">{format!("{}", self.rom_name)}</label>
-                        </div>
-                    </div>
-                </div>
-            
-                <div class="col-xs-12 col-xl-3 sticky-top">
-                    <div class="btn-group" role="group">
-                        <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Init})>{"Init Emulator"}</button>
-                        <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Step(1)})>{"Step"}</button>
-                        <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Frame})>{"Frame"}</button>
-                        <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Go})>{"Go"}</button>
-                        <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Stop})>{"Stop"}</button>
-                    </div>
-                </div>
-
-                <div class="col-xs-12 col-xl-3 sticky-top">
-                    <div class="input-group mb-3">
-                        <div class="input-group-prepend">
-                            <button class="btn btn-outline-primary" type="button" onclick=self.link.callback(|_|{Msg::StartRun})>{"Run"}</button>
-                        </div>
-                        <input type="text" class="form-control" placeholder="080000D4" oninput=self.link.callback(|e: InputData| {Msg::UpdateRunString(e.value)})/>
-                    </div>
-                </div>
-            </>
-        }
-    }
-
     pub fn is_menu_tab_active(&self, menu_item: ActiveMenu) -> String {
         if menu_item == self.active_menu {
             return format!("active");
@@ -700,91 +499,4 @@ impl App {
         }
         return format!("");
     }
-
-
-    fn follow_pc_disassemble(&mut self) {
-        // Update the disassembly with the given pc follow range
-        self.disassembly.clear();
-        let current_pc = if self.gba.borrow().cpu.get_instruction_set() == InstructionSet::Arm { self.gba.borrow().cpu.get_register(ARM_PC) } else { self.gba.borrow().cpu.get_register(THUMB_PC) };
-        let current_instruction_size = if self.gba.borrow().cpu.get_instruction_set() == InstructionSet::Arm { 4 } else { 2 };
-
-        let mut address = current_pc as i64 + (FOLLOW_MIN * current_instruction_size);
-        let total_bytes = (FOLLOW_MAX * current_instruction_size - FOLLOW_MIN * current_instruction_size) as u32;
-
-        if address < 0 {
-            address = 0;
-        }
-
-        self.disassemble(address as u32, total_bytes);
-    }
-
-    fn disassemble(&mut self, address: u32, total_bytes: u32) {
-        let memory_block = self.gba.borrow().memory_bus.mem_map.read_block(address as u32, total_bytes);
-        match self.gba.borrow().cpu.get_instruction_set() {
-            InstructionSet::Arm => {
-                for i in (0..memory_block.len()).step_by(4) {
-                    let instruction: u32 = memory_block[i] as u32 |
-                        ((memory_block[i as usize + 1] as u32) << 8) |
-                        ((memory_block[i as usize + 2] as u32) << 16) |
-                        ((memory_block[i as usize + 3] as u32) << 24);
-
-                    let decode_result = self.gba.borrow().cpu.decode(instruction);
-                    match decode_result {
-                        Ok(decoded_instruction) => {
-                            self.disassembly.push(DisassemblyElement {
-                                address: (i as u32) + address,
-                                instruction_hex: instruction,
-                                instruction_asm: decoded_instruction.asm(),
-                            });
-                        }
-                        Err(_) => {
-                            self.disassembly.push(DisassemblyElement {
-                                address: (i as u32) + address,
-                                instruction_hex: instruction,
-                                instruction_asm: "???".to_string(),
-                            });
-                        }
-                    }
-                }
-
-                self.disassembled = true;
-            }
-            InstructionSet::Thumb => {
-                for i in (0..memory_block.len()).step_by(2) {
-                    let instruction: u16 = memory_block[i] as u16 | ((memory_block[i as usize + 1] as u16) << 8);
-
-                    let decode_result = self.gba.borrow().cpu.decode(instruction as u32);
-                    match decode_result {
-                        Ok(decoded_instruction) => {
-                            self.disassembly.push(DisassemblyElement {
-                                address: (i as u32) + address,
-                                instruction_hex: instruction as u32,
-                                instruction_asm: decoded_instruction.asm(),
-                            });
-                        }
-                        Err(_) => {
-                            self.disassembly.push(DisassemblyElement {
-                                address: (i as u32) + address,
-                                instruction_hex: instruction as u32,
-                                instruction_asm: "???".to_string(),
-                            });
-                        }
-                    }
-                }
-
-                self.disassembled = true;
-            }
-        }
-    }
-}
-
-pub fn convert_frame_to_u8(vec: &Vec<u32>) -> Vec<u8> {
-    let mut new_vec: Vec<u8> = Vec::new();
-    for i in 0..vec.len() {
-        new_vec.push(((vec[i] & 0xFF_00_00) >> 16) as u8);
-        new_vec.push(((vec[i] & 0xFF_00) >> 8) as u8);
-        new_vec.push((vec[i] & 0xFF) as u8);
-        new_vec.push(0xFF as u8);
-    }
-    new_vec
 }

@@ -1,7 +1,6 @@
 use yew::prelude::*;
 use yew::{html, Component, ComponentLink, InputData, KeyboardEvent, Html, ShouldRender};
 use gba_emulator::gba::GBA;
-use gba_emulator::cpu::cpu::InstructionSet;
 use std::rc::Rc;
 use std::cell::RefCell;
 use log::{info};

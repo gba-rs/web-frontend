@@ -1,18 +1,11 @@
 use yew::{html, Html};
 use crate::components::io_reg::{IORegisters};
 
-pub trait InterruptWaitStatePowerDown {
-    fn view_interrupt_master_enable_register(&self) -> Html;
-    fn view_interrupt_enable_register(&self) -> Html;
-    fn view_interrupt_request_flags(&self) -> Html;
-    fn view_wait_state(&self) -> Html;
-}
-
-impl InterruptWaitStatePowerDown for IORegisters {
-    fn view_interrupt_master_enable_register(&self) -> Html {
+impl IORegisters {
+    pub fn view_interrupt_master_enable_register(&self) -> Html {
         html! {
-            <div class="card border-0">
-                <div class="card-header p-0 bg-transparent" id="interrupt-master-enable-register-heading">
+            <div class="io-reg-section">
+                <div class="io-reg-section-header" id="interrupt-master-enable-register-heading">
                     <h5 class="mb-0">
                         <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#interrupt-master-enable-register"
                                 aria-expanded="true" aria-controls="interrupt-master-enable-register">
@@ -21,8 +14,8 @@ impl InterruptWaitStatePowerDown for IORegisters {
                     </h5>
                 </div>
 
-                <div id="interrupt-master-enable-register" class="collapse" aria-labelledby="interrupt-master-enable-register-heading">
-                    <div class="card-body">
+                <div id="interrupt-master-enable-register" class="io-reg-section-body collapse" aria-labelledby="interrupt-master-enable-register-heading">
+                    <div >
                         <table class="table register-table">
                             <thead>
                             <tr>
@@ -43,10 +36,10 @@ impl InterruptWaitStatePowerDown for IORegisters {
         }
     }
 
-    fn view_interrupt_enable_register(&self) -> Html {
+    pub fn view_interrupt_enable_register(&self) -> Html {
         html! {
-            <div class="card border-0">
-                <div class="card-header p-0 bg-transparent" id="interrupt-enable-register-heading">
+            <div class="io-reg-section">
+                <div class="io-reg-section-header" id="interrupt-enable-register-heading">
                     <h5 class="mb-0">
                         <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#interrupt-enable-register"
                                 aria-expanded="true" aria-controls="interrupt-enable-register-register">
@@ -55,8 +48,8 @@ impl InterruptWaitStatePowerDown for IORegisters {
                     </h5>
                 </div>
 
-                <div id="interrupt-enable-register" class="collapse" aria-labelledby="interrupt-enable-register-heading">
-                    <div class="card-body">
+                <div id="interrupt-enable-register" class="io-reg-section-body collapse" aria-labelledby="interrupt-enable-register-heading">
+                    <div >
                         <table class="table register-table">
                             <thead>
                             <tr>
@@ -129,10 +122,10 @@ impl InterruptWaitStatePowerDown for IORegisters {
         }
     }
 
-    fn view_interrupt_request_flags(&self) -> Html {
+    pub fn view_interrupt_request_flags(&self) -> Html {
         html! {
-            <div class="card border-0">
-                <div class="card-header p-0 bg-transparent" id="interrupt-request-flags-heading">
+            <div class="io-reg-section">
+                <div class="io-reg-section-header" id="interrupt-request-flags-heading">
                     <h5 class="mb-0">
                         <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#interrupt-request-flags"
                                 aria-expanded="true" aria-controls="interrupt-request-flags">
@@ -141,8 +134,8 @@ impl InterruptWaitStatePowerDown for IORegisters {
                     </h5>
                 </div>
 
-                <div id="interrupt-request-flags" class="collapse" aria-labelledby="interrupt-request-flags-heading">
-                    <div class="card-body">
+                <div id="interrupt-request-flags" class="io-reg-section-body collapse" aria-labelledby="interrupt-request-flags-heading">
+                    <div >
                         <table class="table register-table">
                             <thead>
                             <tr>
@@ -215,10 +208,10 @@ impl InterruptWaitStatePowerDown for IORegisters {
         }
     }
 
-    fn view_wait_state(&self) -> Html {
+    pub fn view_wait_state(&self) -> Html {
         html! {
-            <div class="card border-0">
-                <div class="card-header p-0 bg-transparent" id="wait-state-heading">
+            <div class="io-reg-section">
+                <div class="io-reg-section-header" id="wait-state-heading">
                     <h5 class="mb-0">
                         <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#wait-state"
                                 aria-expanded="true" aria-controls="wait-state">
@@ -227,8 +220,8 @@ impl InterruptWaitStatePowerDown for IORegisters {
                     </h5>
                 </div>
 
-                <div id="wait-state" class="collapse" aria-labelledby="wait-state-heading">
-                    <div class="card-body">
+                <div id="wait-state" class="io-reg-section-body collapse" aria-labelledby="wait-state-heading">
+                    <div >
                         <table class="table register-table">
                             <thead>
                             <tr>

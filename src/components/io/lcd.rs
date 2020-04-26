@@ -1,26 +1,11 @@
 use yew::{html, Html};
 use crate::components::io_reg::{IORegisters};
 
-pub trait LCD {
-    fn view_display_control(&self) -> Html;
-    fn view_display_status(&self) -> Html;
-    fn view_green_swap(&self) -> Html;
-    fn view_bg(&self, bg_number: usize) -> Html;
-    fn view_bg_affine_component(&self, bg_number: usize) -> Html;
-    fn view_window(&self, window_number: usize) -> Html;
-    fn view_control_window_inside(&self) -> Html;
-    fn view_control_window_outside(&self) -> Html;
-    fn view_mosaic_size(&self) -> Html;
-    fn view_color_spec_effect_selection(&self) -> Html;
-    fn view_alpha_blending(&self) -> Html;
-    fn view_brightness(&self) -> Html;
-}
-
-impl LCD for IORegisters {
-    fn view_display_control(&self) -> Html {
+impl IORegisters {
+    pub fn view_display_control(&self) -> Html {
         html! {
-            <div class="card border-0">
-                <div class="card-header p-0 bg-transparent" id="display-control-heading">
+            <div class="io-reg-section">
+                <div class="io-reg-section-header" id="display-control-heading">
                     <h5 class="mb-0">
                         <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#display-control"
                                 aria-expanded="true" aria-controls="display-control">
@@ -29,8 +14,8 @@ impl LCD for IORegisters {
                     </h5>
                 </div>
 
-                <div id="display-control" class="collapse" aria-labelledby="display-control-heading">
-                    <div class="card-body">
+                <div id="display-control" class="io-reg-section-body collapse" aria-labelledby="display-control-heading">
+                    <div >
                         <table class="table register-table">
                             <thead>
                             <tr>
@@ -102,10 +87,11 @@ impl LCD for IORegisters {
             </div>
         }
     }
-    fn view_display_status(&self) -> Html {
+
+    pub fn view_display_status(&self) -> Html {
         html! {
-            <div class="card border-0">
-                <div class="card-header p-0 bg-transparent" id="display-status-heading">
+            <div class="io-reg-section">
+                <div class="io-reg-section-header" id="display-status-heading">
                     <h5 class="mb-0">
                         <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#display-status"
                                 aria-expanded="true" aria-controls="display-status">
@@ -114,8 +100,8 @@ impl LCD for IORegisters {
                     </h5>
                 </div>
 
-                <div id="display-status" class="collapse" aria-labelledby="display-status-heading">
-                    <div class="card-body">
+                <div id="display-status" class="io-reg-section-body collapse" aria-labelledby="display-status-heading">
+                    <div >
                         <table class="table register-table">
                             <thead>
                             <tr>
@@ -160,10 +146,10 @@ impl LCD for IORegisters {
         }
     }
 
-    fn view_green_swap(&self) -> Html {
+    pub fn view_green_swap(&self) -> Html {
         html! {
-            <div class="card border-0">
-                <div class="card-header p-0 bg-transparent" id="green-swap-heading">
+            <div class="io-reg-section">
+                <div class="io-reg-section-header" id="green-swap-heading">
                     <h5 class="mb-0">
                         <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#green-swap"
                                 aria-expanded="true" aria-controls="green-swap">
@@ -172,8 +158,8 @@ impl LCD for IORegisters {
                     </h5>
                 </div>
 
-                <div id="green-swap" class="collapse" aria-labelledby="green-swap-heading">
-                    <div class="card-body">
+                <div id="green-swap" class="io-reg-section-body collapse" aria-labelledby="green-swap-heading">
+                    <div >
                         <table class="table register-table">
                             <thead>
                             <tr>
@@ -194,10 +180,10 @@ impl LCD for IORegisters {
         }
     }
 
-    fn view_bg(&self, bg_number: usize) -> Html {
+    pub fn view_bg(&self, bg_number: usize) -> Html {
         html! {
-            <div class="card border-0">
-                <div class="card-header p-0 bg-transparent" id={format!("bg{}-heading", bg_number + 1)}>
+            <div class="io-reg-section">
+                <div class="io-reg-section-header" id={format!("bg{}-heading", bg_number + 1)}>
                     <h5 class="mb-0">
                         <button class="btn btn-link text-dark" data-toggle="collapse" data-target={format!("#bg{}", bg_number + 1)}
                                 aria-expanded="true" aria-controls={format!("bg{}", bg_number + 1)}>
@@ -206,8 +192,8 @@ impl LCD for IORegisters {
                     </h5>
                 </div>
 
-                <div id={format!("bg{}", bg_number + 1)} class="collapse" aria-labelledby={format!("bg{}-heading", bg_number + 1)}  >
-                    <div class="card-body">
+                <div id={format!("bg{}", bg_number + 1)} class="io-reg-section-body collapse" aria-labelledby={format!("bg{}-heading", bg_number + 1)}  >
+                    <div >
                         <table class="table register-table">
                             <thead>
                             <tr>
@@ -260,10 +246,10 @@ impl LCD for IORegisters {
         }
     }
 
-    fn view_bg_affine_component(&self, bg_number: usize) -> Html {
+    pub fn view_bg_affine_component(&self, bg_number: usize) -> Html {
         html! {
-            <div class="card border-0">
-                <div class="card-header p-0 bg-transparent" id={format!("bg_affine{}-heading", bg_number + 1)}>
+            <div class="io-reg-section">
+                <div class="io-reg-section-header" id={format!("bg_affine{}-heading", bg_number + 1)}>
                     <h5 class="mb-0">
                         <button class="btn btn-link text-dark" data-toggle="collapse" data-target={format!("#bg_affine{}", bg_number + 1)}
                                 aria-expanded="true" aria-controls={format!("bg_affine{}", bg_number + 1)}>
@@ -272,8 +258,8 @@ impl LCD for IORegisters {
                     </h5>
                 </div>
 
-                <div id={format!("bg_affine{}", bg_number + 1)} class="collapse" aria-labelledby={format!("bg_affine{}-heading", bg_number + 1)}  >
-                    <div class="card-body">
+                <div id={format!("bg_affine{}", bg_number + 1)} class="io-reg-section-body collapse" aria-labelledby={format!("bg_affine{}-heading", bg_number + 1)}  >
+                    <div >
                         <table class="table register-table">
                             <thead>
                             <tr>
@@ -369,10 +355,11 @@ impl LCD for IORegisters {
             </div>
         }
     }
-    fn view_window(&self, window_number: usize) -> Html {
+
+    pub fn view_window(&self, window_number: usize) -> Html {
         html! {
-            <div class="card border-0">
-                <div class="card-header p-0 bg-transparent" id={format!("window{}-heading", window_number + 1)}>
+            <div class="io-reg-section">
+                <div class="io-reg-section-header" id={format!("window{}-heading", window_number + 1)}>
                     <h5 class="mb-0">
                         <button class="btn btn-link text-dark" data-toggle="collapse" data-target={format!("#window{}", window_number + 1)}
                                 aria-expanded="true" aria-controls={format!("window{}", window_number + 1)}>
@@ -381,8 +368,8 @@ impl LCD for IORegisters {
                     </h5>
                 </div>
 
-                <div id={format!("window{}", window_number + 1)} class="collapse" aria-labelledby={format!("window{}-heading", window_number + 1)}  >
-                    <div class="card-body">
+                <div id={format!("window{}", window_number + 1)} class="io-reg-section-body collapse" aria-labelledby={format!("window{}-heading", window_number + 1)}  >
+                    <div >
                         <table class="table register-table">
                             <thead>
                             <tr>
@@ -415,10 +402,10 @@ impl LCD for IORegisters {
         }
     }
 
-    fn view_control_window_inside(&self) -> Html {
+    pub fn view_control_window_inside(&self) -> Html {
         html! {
-            <div class="card border-0">
-                <div class="card-header p-0 bg-transparent" id="control-window-inside-heading">
+            <div class="io-reg-section">
+                <div class="io-reg-section-header" id="control-window-inside-heading">
                     <h5 class="mb-0">
                         <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#control-window-inside"
                                 aria-expanded="true" aria-controls="control-window-inside">
@@ -427,8 +414,8 @@ impl LCD for IORegisters {
                     </h5>
                 </div>
 
-                <div id="control-window-inside" class="collapse" aria-labelledby="control-window-inside-heading">
-                    <div class="card-body">
+                <div id="control-window-inside" class="io-reg-section-body collapse" aria-labelledby="control-window-inside-heading">
+                    <div >
                         <table class="table register-table">
                             <thead>
                             <tr>
@@ -469,10 +456,10 @@ impl LCD for IORegisters {
         }
     }
 
-    fn view_control_window_outside(&self) -> Html {
+    pub fn view_control_window_outside(&self) -> Html {
         html! {
-            <div class="card border-0">
-                <div class="card-header p-0 bg-transparent" id="control-window-outside-heading">
+            <div class="io-reg-section">
+                <div class="io-reg-section-header" id="control-window-outside-heading">
                     <h5 class="mb-0">
                         <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#control-window-outside"
                                 aria-expanded="true" aria-controls="control-window-outside">
@@ -481,8 +468,8 @@ impl LCD for IORegisters {
                     </h5>
                 </div>
 
-                <div id="control-window-outside" class="collapse" aria-labelledby="control-window-outside-heading">
-                    <div class="card-body">
+                <div id="control-window-outside" class="io-reg-section-body collapse" aria-labelledby="control-window-outside-heading">
+                    <div >
                         <table class="table register-table">
                             <thead>
                             <tr>
@@ -523,10 +510,10 @@ impl LCD for IORegisters {
         }
     }
 
-    fn view_mosaic_size(&self) -> Html {
+    pub fn view_mosaic_size(&self) -> Html {
         html! {
-            <div class="card border-0">
-                <div class="card-header p-0 bg-transparent" id="mosaic-size-heading">
+            <div class="io-reg-section">
+                <div class="io-reg-section-header" id="mosaic-size-heading">
                     <h5 class="mb-0">
                         <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#mosaic-size"
                                 aria-expanded="true" aria-controls="mosaic-size">
@@ -535,8 +522,8 @@ impl LCD for IORegisters {
                     </h5>
                 </div>
 
-                <div id="mosaic-size" class="collapse" aria-labelledby="mosaic-size-heading">
-                    <div class="card-body">
+                <div id="mosaic-size" class="io-reg-section-body collapse" aria-labelledby="mosaic-size-heading">
+                    <div >
                         <table class="table register-table">
                             <thead>
                             <tr>
@@ -569,10 +556,10 @@ impl LCD for IORegisters {
         }
     }
 
-    fn view_color_spec_effect_selection(&self) -> Html {
+    pub fn view_color_spec_effect_selection(&self) -> Html {
         html! {
-            <div class="card border-0">
-                <div class="card-header p-0 bg-transparent" id="color-spec-effec-sel-heading">
+            <div class="io-reg-section">
+                <div class="io-reg-section-header" id="color-spec-effec-sel-heading">
                     <h5 class="mb-0">
                         <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#color-spec-effec-sel"
                                 aria-expanded="true" aria-controls="color-spec-effec-sel">
@@ -581,8 +568,8 @@ impl LCD for IORegisters {
                     </h5>
                 </div>
 
-                <div id="color-spec-effec-sel" class="collapse" aria-labelledby="color-spec-effec-sel-heading">
-                    <div class="card-body">
+                <div id="color-spec-effec-sel" class="io-reg-section-body collapse" aria-labelledby="color-spec-effec-sel-heading">
+                    <div >
                         <table class="table register-table">
                             <thead>
                             <tr>
@@ -651,10 +638,10 @@ impl LCD for IORegisters {
         }
     }
 
-    fn view_alpha_blending(&self) -> Html {
+    pub fn view_alpha_blending(&self) -> Html {
         html! {
-            <div class="card border-0">
-                <div class="card-header p-0 bg-transparent" id="alpha-blending-heading">
+            <div class="io-reg-section">
+                <div class="io-reg-section-header" id="alpha-blending-heading">
                     <h5 class="mb-0">
                         <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#alpha-blending"
                                 aria-expanded="true" aria-controls="alpha-blending">
@@ -663,8 +650,8 @@ impl LCD for IORegisters {
                     </h5>
                 </div>
 
-                <div id="alpha-blending" class="collapse" aria-labelledby="alpha-blending-heading">
-                    <div class="card-body">
+                <div id="alpha-blending" class="io-reg-section-body collapse" aria-labelledby="alpha-blending-heading">
+                    <div >
                         <table class="table register-table">
                             <thead>
                             <tr>
@@ -689,10 +676,10 @@ impl LCD for IORegisters {
         }
     }
 
-    fn view_brightness(&self) -> Html {
+    pub fn view_brightness(&self) -> Html {
         html! {
-            <div class="card border-0">
-                <div class="card-header p-0 bg-transparent" id="brightness-heading">
+            <div class="io-reg-section">
+                <div class="io-reg-section-header" id="brightness-heading">
                     <h5 class="mb-0">
                         <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#brightness"
                                 aria-expanded="true" aria-controls="brightness">
@@ -701,8 +688,8 @@ impl LCD for IORegisters {
                     </h5>
                 </div>
 
-                <div id="brightness" class="collapse" aria-labelledby="brightness-heading">
-                    <div class="card-body">
+                <div id="brightness" class="io-reg-section-body collapse" aria-labelledby="brightness-heading">
+                    <div >
                         <table class="table register-table">
                             <thead>
                             <tr>

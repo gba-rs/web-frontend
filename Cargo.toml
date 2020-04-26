@@ -32,4 +32,6 @@ features = [
   'Window',
   'ImageData',
   'HtmlImageElement',
+  'KeyboardEvent',
+  'KeyEvent'
 ]

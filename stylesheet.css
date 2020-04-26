@@ -53,12 +53,34 @@ body{
     display: inline-block;
 }
 
-.register-table {
-    width: 100%;
+.io-reg{
+    font-size: 0.75rem;
+    overflow-y:scroll; 
+    max-height: 700px;
 }
 
-.register-table td{
-    padding: 4px !important;
+.io-reg-section {
+    border-left: 1px solid #dee2e6;
+}
+
+.io-reg-section-header {
+    border-top: 1px solid #dee2e6;
+}
+
+.io-reg-section-header button {
+    font-size: 0.75rem;
+}
+
+.io-reg-section-body {
+    padding-left: 1rem;
+}
+
+.table.register-table {
+    margin-bottom: 0;
+}
+
+.table.register-table td, .table.register-table thead th{
+    padding: 2px 4px;
 }
 
 .hex-edit {

@@ -1,5 +1,5 @@
 build:
-	wasm-pack build --release --target web
+	rustup run nightly wasm-pack build --release --target web
 	rollup ./main.js --format iife --file ./pkg/bundle.js
 
 run: build
