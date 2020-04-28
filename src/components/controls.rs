@@ -7,7 +7,7 @@ impl App {
         html! {
             <>
                 // <h4>{"Control"}</h4>
-                <div class="col-xs-12 col-md-1 col-xl-2">                               
+                <div class="col-xs-12 col-md-2 col-xl-2">                               
                     <div class="input-group mb-3">
                         <div class="input-group-prepend">
                             <span class="input-group-text" id="inputGroupFileAddon01">{"Bios"}</span>
@@ -27,7 +27,7 @@ impl App {
                     </div>
                 </div>
 
-                <div class="col-xs-12 col-md-1 col-xl-2">                               
+                <div class="col-xs-12 col-md-2 col-xl-2">                               
                     <div class="input-group mb-3">
                         <div class="input-group-prepend">
                             <span class="input-group-text" id="inputGroupFileAddon02">{"Rom"}</span>
@@ -47,7 +47,7 @@ impl App {
                     </div>
                 </div>
 
-                <div class="col-xs-12 col-md-1 col-xl-2">                               
+                <div class="col-xs-12 col-md-2 col-xl-2">                               
                 <div class="input-group mb-3">
                         <div class="input-group-prepend">
                             <span class="input-group-text" id="inputGroupFileAddon01">{"Save"}</span>
@@ -67,17 +67,24 @@ impl App {
                     </div>
                 </div>
             
-                <div class="col-xs-12 col-xl-4">
+                <div class="col-xs-12 col-md-4 col-xl-4">
                     <div class="btn-group" role="group">
                         <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Init})>{"Init Emulator"}</button>
                         <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Step(1)})>{"Step"}</button>
                         <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Frame})>{"Frame"}</button>
                         <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Go})>{"Go"}</button>
                         <button class="btn btn-outline-primary" onclick=self.link.callback(|_|{Msg::Stop})>{"Stop"}</button>
+                        
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="follow-addon">{"Logging"}</span>
+                            <div class="input-group-text">
+                                <input type="checkbox" checked={unsafe{crate::logging::LOGGER.should_log}} onclick=self.link.callback(|_|{Msg::ToggleLog})/>
+                            </div>
+                        </div>                            
                     </div>
                 </div>
 
-                <div class="col-xs-12 col-xl-2">
+                <div class="col-xs-12 col-md-4 col-xl-2">
                     <div class="input-group mb-3">
                         <div class="input-group-prepend">
                             <button class="btn btn-outline-primary" type="button" onclick=self.link.callback(|_|{Msg::StartRun})>{"Run"}</button>

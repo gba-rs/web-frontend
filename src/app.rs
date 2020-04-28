@@ -88,6 +88,7 @@ pub enum Msg {
     Frame,
     Go,
     Stop,
+    ToggleLog
 }
 
 #[derive(PartialEq)]
@@ -191,7 +192,7 @@ impl Component for App {
                                 web_sys::KeyEvent::DOM_VK_D => key_down_clone.borrow_mut().key_status.set_dpad_right(0),
                                 web_sys::KeyEvent::DOM_VK_H => key_down_clone.borrow_mut().key_status.set_button_a(0),
                                 web_sys::KeyEvent::DOM_VK_J => key_down_clone.borrow_mut().key_status.set_button_b(0),
-                                web_sys::KeyEvent::DOM_VK_R => key_down_clone.borrow_mut().key_status.set_button_r(0),
+                                web_sys::KeyEvent::DOM_VK_E => key_down_clone.borrow_mut().key_status.set_button_r(0),
                                 web_sys::KeyEvent::DOM_VK_Q => key_down_clone.borrow_mut().key_status.set_button_l(0),
                                 web_sys::KeyEvent::DOM_VK_BACK_SPACE => key_down_clone.borrow_mut().key_status.set_button_select(0),
                                 web_sys::KeyEvent::DOM_VK_RETURN => key_down_clone.borrow_mut().key_status.set_button_start(0),
@@ -211,7 +212,7 @@ impl Component for App {
                                 web_sys::KeyEvent::DOM_VK_D => key_up_clone.borrow_mut().key_status.set_dpad_right(1),
                                 web_sys::KeyEvent::DOM_VK_H => key_up_clone.borrow_mut().key_status.set_button_a(1),
                                 web_sys::KeyEvent::DOM_VK_J => key_up_clone.borrow_mut().key_status.set_button_b(1),
-                                web_sys::KeyEvent::DOM_VK_R => key_up_clone.borrow_mut().key_status.set_button_r(1),
+                                web_sys::KeyEvent::DOM_VK_E => key_up_clone.borrow_mut().key_status.set_button_r(1),
                                 web_sys::KeyEvent::DOM_VK_Q => key_up_clone.borrow_mut().key_status.set_button_l(1),
                                 web_sys::KeyEvent::DOM_VK_BACK_SPACE => key_up_clone.borrow_mut().key_status.set_button_select(1),
                                 web_sys::KeyEvent::DOM_VK_RETURN => key_up_clone.borrow_mut().key_status.set_button_start(1),
@@ -265,6 +266,12 @@ impl Component for App {
                     }
                 }
 
+                false
+            }
+            Msg::ToggleLog => {
+                unsafe {
+                    crate::logging::LOGGER.should_log = !crate::logging::LOGGER.should_log;
+                }
                 false
             }
             Msg::Run(address) => {
@@ -368,7 +375,7 @@ impl Component for App {
                         }
                     }
                     gba_clone.borrow_mut().frame();
-                    gba_clone.borrow_mut().key_status.set_register(0xFFFF);
+                    // gba_clone.borrow_mut().key_status.set_register(0xFFFF);
                     show_canvas(convert_frame_to_u8(&gba_clone.borrow().gpu.frame_buffer));
 
                     request_animation_frame(f.borrow().as_ref().unwrap());
