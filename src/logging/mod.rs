@@ -5,7 +5,7 @@ pub struct ConsoleLogger{
     pub should_log: bool
 }
 
-pub static mut LOGGER: ConsoleLogger = ConsoleLogger{ should_log: true };
+pub static mut LOGGER: ConsoleLogger = ConsoleLogger{ should_log: false };
 
 impl log::Log for ConsoleLogger {
     fn enabled(&self, metadata: &Metadata) -> bool {
