@@ -1,7 +1,6 @@
 use yew::prelude::*;
 use yew::{html, Component, ComponentLink, InputData, KeyboardEvent, Html, ShouldRender};
 use gba_emulator::gba::GBA;
-use gba_emulator::cpu::cpu::InstructionSet;
 use std::rc::Rc;
 use std::cell::RefCell;
 use log::{info};
@@ -120,8 +119,8 @@ impl Component for Registers {
                         </tr>
                     </thead>
                     <tbody>
-                        {for (0..if self.props.gba.borrow().cpu.current_instruction_set == InstructionSet::Arm { 16 } else { 11 }).map(|val|{
-                            let reg_val = self.props.gba.borrow().cpu.get_register(val);
+                        {for (0..16).map(|val|{
+                            let reg_val = self.props.gba.borrow().cpu.get_register_unsafe(val);
                             let reg_num = val;
                             html! {
                                 <tr>

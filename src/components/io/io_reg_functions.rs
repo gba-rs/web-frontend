@@ -1,8 +1,5 @@
 use yew::{html, Html};
 use crate::components::io_reg::{IORegisters};
-use crate::components::io::lcd::LCD;
-use crate::components::io::keypad::Keypad;
-use crate::components::io::interrupt_ws_pd::InterruptWaitStatePowerDown;
 
 impl IORegisters {
     pub fn view_lcd(&self) -> Html {

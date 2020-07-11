@@ -4,4 +4,8 @@ pub mod cpsr;
 pub mod status;
 pub mod memory_viewer;
 pub mod io_reg;
+pub mod disassembler;
+pub mod palette_viewer;
+pub mod canvas;
+pub mod controls;
 pub mod io;

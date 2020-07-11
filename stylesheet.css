@@ -5,6 +5,7 @@ html{
     background: #e0e0e0;
     font-family: sans-serif;
     margin: 0;
+    font-size: 0.75rem;
 }
 
 body{
@@ -53,12 +54,34 @@ body{
     display: inline-block;
 }
 
-.register-table {
-    width: 100%;
+.io-reg{
+    /*font-size: 0.75rem;*/
+    overflow-y:scroll; 
+    max-height: 700px;
 }
 
-.register-table td{
-    padding: 4px !important;
+.io-reg-section {
+    border-left: 1px solid #dee2e6;
+}
+
+.io-reg-section-header {
+    border-top: 1px solid #dee2e6;
+}
+
+.io-reg-section-header button {
+    font-size: 1rem;
+}
+
+.io-reg-section-body {
+    padding-left: 1rem;
+}
+
+.table.register-table {
+    margin-bottom: 0;
+}
+
+.table.register-table td, .table.register-table thead th{
+    padding: 2px 4px;
 }
 
 .hex-edit {
@@ -78,6 +101,7 @@ body{
 .code-block {
     line-height: 1;
     font-family: monospace;
+    font-size: 1.25rem;
     overflow: scroll;
     max-height: 400px;
     white-space: nowrap;
@@ -102,15 +126,13 @@ body{
     min-width: 15em;
 }
 
-.io-reg {
-    overflow: scroll;
-    height: 800px;
-    font-size: 0.8rem;
+.palette_block {
+    display:inline-block; 
+    height: 15px;
+    width: 15px;
+    margin: 0.05em
 }
 
-.io-reg .btn-link {
-    font-size: 0.8rem;
-}
 
 /*Utilities*/
 .text-center{
