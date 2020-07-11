@@ -1,16 +1,11 @@
 use yew::{html, Html};
 use crate::components::io_reg::{IORegisters};
 
-pub trait Keypad {
-    fn view_key_status(&self) -> Html;
-    fn view_key_interrupt_control(&self) -> Html;
-}
-
-impl Keypad for IORegisters {
-    fn view_key_status(&self) -> Html {
+impl IORegisters {
+    pub fn view_key_status(&self) -> Html {
         html! {
-            <div class="card border-0">
-                <div class="card-header p-0 bg-transparent" id="key-status-heading">
+            <div class="io-reg-section">
+                <div class="io-reg-section-header" id="key-status-heading">
                     <h5 class="mb-0">
                         <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#key-status"
                                 aria-expanded="true" aria-controls="key-status">
@@ -19,8 +14,8 @@ impl Keypad for IORegisters {
                     </h5>
                 </div>
 
-                <div id="key-status" class="collapse" aria-labelledby="key-status-heading">
-                    <div class="card-body">
+                <div id="key-status" class="io-reg-section-body collapse" aria-labelledby="key-status-heading">
+                    <div >
                         <table class="table register-table">
                             <thead>
                             <tr>
@@ -77,10 +72,10 @@ impl Keypad for IORegisters {
         }
     }
 
-    fn view_key_interrupt_control(&self) -> Html {
+    pub fn view_key_interrupt_control(&self) -> Html {
         html! {
-            <div class="card border-0">
-                <div class="card-header p-0 bg-transparent" id="key-interrupt-control-heading">
+            <div class="io-reg-section">
+                <div class="io-reg-section-header" id="key-interrupt-control-heading">
                     <h5 class="mb-0">
                         <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#key-interrupt-control"
                                 aria-expanded="true" aria-controls="key-interrupt-control">
@@ -89,8 +84,8 @@ impl Keypad for IORegisters {
                     </h5>
                 </div>
 
-                <div id="key-interrupt-control" class="collapse" aria-labelledby="key-interrupt-control-heading">
-                    <div class="card-body">
+                <div id="key-interrupt-control" class="io-reg-section-body collapse" aria-labelledby="key-interrupt-control-heading">
+                    <div >
                         <table class="table register-table">
                             <thead>
                             <tr>

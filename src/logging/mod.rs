@@ -1,9 +1,11 @@
 use log::{Record, Level, Metadata, SetLoggerError};
 use yew::services::console::ConsoleService;
 
-pub struct ConsoleLogger;
+pub struct ConsoleLogger{
+    pub should_log: bool
+}
 
-pub static LOGGER: ConsoleLogger = ConsoleLogger;
+pub static mut LOGGER: ConsoleLogger = ConsoleLogger{ should_log: false };
 
 impl log::Log for ConsoleLogger {
     fn enabled(&self, metadata: &Metadata) -> bool {
@@ -20,7 +22,9 @@ impl log::Log for ConsoleLogger {
             };
 
             if !target.contains("yew") {
-                ConsoleService::new().log(&format!("[{}][{}] {}", target, record.level(), record.args()));
+                if self.should_log {
+                    ConsoleService::new().log(&format!("[{}][{}] {}", target, record.level(), record.args()));
+                }
             }
         }
     }
@@ -29,7 +33,9 @@ impl log::Log for ConsoleLogger {
 }
 
 pub fn init_logger() -> Result<(), SetLoggerError> {
-    log::set_logger(&LOGGER)?;
+    unsafe {
+        log::set_logger(&LOGGER)?;
+    }
     log::set_max_level(Level::Trace.to_level_filter());
     Ok(())
 }
