@@ -1,0 +1,6 @@
+*.json
+*.ts
+gba_web_frontend.js
+*.md
+LICENSE*
+/snippets
