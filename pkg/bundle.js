@@ -717,12 +717,12 @@
             var ret = wasm.memory;
             return addHeapObject(ret);
         };
-        imports.wbg.__wbindgen_closure_wrapper870 = function(arg0, arg1, arg2) {
-            var ret = makeMutClosure(arg0, arg1, 425, __wbg_adapter_23);
-            return addHeapObject(ret);
-        };
         imports.wbg.__wbindgen_closure_wrapper124 = function(arg0, arg1, arg2) {
             var ret = makeMutClosure(arg0, arg1, 28, __wbg_adapter_20);
+            return addHeapObject(ret);
+        };
+        imports.wbg.__wbindgen_closure_wrapper870 = function(arg0, arg1, arg2) {
+            var ret = makeMutClosure(arg0, arg1, 425, __wbg_adapter_23);
             return addHeapObject(ret);
         };
         imports.wbg.__wbindgen_closure_wrapper122 = function(arg0, arg1, arg2) {
@@ -743,7 +743,7 @@
     }
 
     async function main() {
-       await init('/pkg/gba_web_frontend_bg.wasm');
+       await init('pkg/gba_web_frontend_bg.wasm');
        run_app();
     }
     main();
