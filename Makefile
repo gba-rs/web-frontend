@@ -1,7 +1,6 @@
 build:
 	rustup run nightly wasm-pack build --release --target web
 	rollup ./main.js --format iife --file ./pkg/bundle.js
-	rollup ./play.js --format iife --file ./pkg/play_bundle.js
 
 run: build
 	python -m http.server 8080
