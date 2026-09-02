@@ -24,6 +24,8 @@ console_log = "1.0"
 console_error_panic_hook = "0.1"
 gloo-file = "0.3"
 js-sys = "0.3"
+idb = "0.6"
+wasm-bindgen-futures = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 bincode = "1.3"
 
