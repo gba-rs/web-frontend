@@ -22,7 +22,6 @@ use web_sys::InputEvent;
 
 use crate::components::{
     registers::Registers,
-    navbar::NavBar,
     cpsr::Cpsr,
     status::Status,
     memory_viewer::MemoryViewer,
@@ -39,10 +38,12 @@ use crate::logging;
 use crate::audio::player::AudioPlayer;
 use crate::audio::push_audio_samples;
 use crate::dom_util::files_from_input;
+use crate::route::Route;
 use crate::save_state;
 use crate::storage;
 use crate::frame_pacing::{FrameAccumulator, MAX_CATCHUP_FRAMES, MAX_CATCHUP_FRAMES_TURBO, TURBO_MULTIPLIER};
 use idb::Database;
+use yew_router::prelude::*;
 
 pub const START_PC: u32 = 0;
 
@@ -93,6 +94,7 @@ pub enum Msg {
     LoadedBios(String, Vec<u8>),
     LoadedSave(String, Vec<u8>),
     Init,
+    Play,
     Step(u8),
     Run(u32),
     Files(Option<web_sys::FileList>, FileLoadType),
@@ -303,6 +305,13 @@ impl Component for App {
                 }
 
                 true
+            }
+            Msg::Play => {
+                if !self.initialized {
+                    ctx.link().send_message(Msg::Init);
+                }
+                ctx.link().send_message(Msg::Go);
+                false
             }
             Msg::Step(step_count) => {
                 for _ in 0..step_count {
@@ -566,92 +575,166 @@ impl Component for App {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+        let play_html = self.view_play(ctx);
+        let debug_html = self.view_debug(ctx);
+        let switch = Callback::from(move |route: Route| -> Html {
+            match route {
+                Route::Play => play_html.clone(),
+                Route::Debug => debug_html.clone(),
+            }
+        });
+
         html! {
-            <>
-                <NavBar/>
-                <div class="container-fluid">
-                    <div class="row">
-                        {self.view_control(ctx)}
+            <HashRouter>
+                <div class="app-shell">
+                    {self.view_nav(ctx)}
+                    <div class="app-canvas-wrap">
+                        {self.view_canvas()}
                     </div>
-                    <div class="row">
-                         <div class="col-xs-12 col-lg-6 col-xl-6">
-                             <ul class="nav nav-tabs">
-                               <li class="nav-item"><a class={format!("nav-link {}",self.is_menu_tab_active(ActiveMenu::Registers))} href="#" onclick={ctx.link().callback(|_|{Msg::ToggleMenu(ActiveMenu::Registers)})}>{"Registers/Status"}</a></li>
-                               <li class="nav-item"><a class={format!("nav-link {}",self.is_menu_tab_active(ActiveMenu::IO))} href="#" onclick={ctx.link().callback(|_|{Msg::ToggleMenu(ActiveMenu::IO)})}>{"IO Registers"}</a></li>
-                               <li class="nav-item"><a class={format!("nav-link {}",self.is_menu_tab_active(ActiveMenu::Graphics))} href="#" onclick={ctx.link().callback(|_|{Msg::ToggleMenu(ActiveMenu::Graphics)})}>{"Graphics"}</a></li>
-                               <li class="nav-item"><a class={format!("nav-link {}",self.is_menu_tab_active(ActiveMenu::Debug))} href="#" onclick={ctx.link().callback(|_|{Msg::ToggleMenu(ActiveMenu::Debug)})}>{"Debug"}</a></li>
-                             </ul>
-                             <div class={format!("row {}", self.is_menu_body_active(ActiveMenu::Registers))}>
-                                 <div class="col-xs-12 col-lg-6 col-xl-6">
-                                    <Status gba={self.gba.clone()}/>
-                                    <Cpsr gba={self.gba.clone()}/>
-                                </div>
-
-                                <div class="col-xs-12 col-lg-6 col-xl-6">
-                                    <Registers hex={self.hex} gba={self.gba.clone()}/>
-                                </div>
-                             </div>
-                             <div class={format!("row {}", self.is_menu_body_active(ActiveMenu::IO))}>
-                                <div class="col-xs-12 col-lg-12 col-xl-12">
-                                    <IORegisters hex={self.hex} gba={self.gba.clone()}/>
-                                </div>
-                             </div>
-                             <div class={format!("row {}", self.is_menu_body_active(ActiveMenu::Graphics))}>
-                                <div class="col-xs-12 col-lg-12 col-xl-12 text-center">
-                                        {self.view_canvas()}
-                                </div>
-                             </div>
-                             <div class={format!("row {}", self.is_menu_body_active(ActiveMenu::Graphics))}>
-                                    <div class="col-xs-1 col-lg-1 col-xl-1"></div>
-                                    <div class="col-xs-5 col-lg-5 col-xl-5 text-center">
-                                        <h5>{"Background Palette"}</h5>
-                                        {self.view_bg_palette()}
-                                    </div>
-                                    <div class="col-xs-5 col-lg-5 col-xl-5 text-center">
-                                        <h5>{"Object Palette"}</h5>
-                                        {self.view_obj_palette()}
-                                    </div>
-                                    <div class="col-xs-1 col-lg-1 col-xl-1"></div>
-                            </div>
-                             <div class={format!("row {}", self.is_menu_body_active(ActiveMenu::Debug))}>
-                                <div class="col-xs-12 col-lg-6 col-xl-6 text-center">
-                                    <h5>{"Sound"}</h5>
-                                    <SoundPanel samples={self.recent_audio_samples.borrow().clone()}/>
-                                </div>
-                                <div class="col-xs-12 col-lg-6 col-xl-6 text-center">
-                                    <h5>{"Sprites"}</h5>
-                                    <SpritesPanel gba={self.gba.clone()}/>
-                                </div>
-                                <div class="col-xs-12 col-lg-6 col-xl-6 text-center">
-                                    <h5>{"Tiles"}</h5>
-                                    <TilesPanel gba={self.gba.clone()}/>
-                                </div>
-                                <div class="col-xs-12 col-lg-6 col-xl-6 text-center">
-                                    <h5>{"Backgrounds"}</h5>
-                                    <BackgroundsPanel gba={self.gba.clone()}/>
-                                </div>
-                             </div>
-                         </div>
-
-                        <div class="col-xs-12 col-xl-6">
-                            <div class="row">
-                                <div class="col-3">
-                                    {self.view_range_dis(ctx)}
-                                </div>
-                                <div class="col-9">
-                                    {self.view_disassembly()}
-                                </div>
-                            </div>
-                            <MemoryViewer gba={self.gba.clone()} initialized={self.initialized}/>
-                        </div>
-                    </div>
+                    <Switch<Route> render={switch}/>
                 </div>
-            </>
+            </HashRouter>
         }
     }
 }
 
 impl App {
+    pub fn view_nav(&self, _ctx: &Context<Self>) -> Html {
+        html! {
+            <header class="app-nav">
+                <span class="app-logo">{"GBA"}</span>
+                <nav class="app-nav-links">
+                    <Link<Route> classes="app-nav-link" to={Route::Play}>{"Play"}</Link<Route>>
+                    <Link<Route> classes="app-nav-link" to={Route::Debug}>{"Debugger"}</Link<Route>>
+                </nav>
+            </header>
+        }
+    }
+
+    pub fn view_play(&self, ctx: &Context<Self>) -> Html {
+        let ready = !self.game_pack.bios.is_empty() && !self.game_pack.rom.is_empty();
+
+        html! {
+            <main class="player-main">
+                <div class="player-card">
+                    <div class="file-row">
+                        <label class="file-picker">
+                            <span class="file-picker-label">{"BIOS"}</span>
+                            <span class="file-picker-name">{self.bios_name.clone()}</span>
+                            <input type="file" onchange={ctx.link().callback(|e: Event| {
+                                Msg::Files(files_from_input(e), FileLoadType::Bios)
+                            })}/>
+                        </label>
+                        <label class="file-picker">
+                            <span class="file-picker-label">{"ROM"}</span>
+                            <span class="file-picker-name">{self.rom_name.clone()}</span>
+                            <input type="file" onchange={ctx.link().callback(|e: Event| {
+                                Msg::Files(files_from_input(e), FileLoadType::Rom)
+                            })}/>
+                        </label>
+                    </div>
+
+                    <div class="transport-row">
+                        <button class="play-button" disabled={!ready} onclick={ctx.link().callback(|_| Msg::Play)}>{"Play"}</button>
+                        <button class="pause-button" onclick={ctx.link().callback(|_| Msg::Stop)}>{"Pause"}</button>
+                    </div>
+
+                    <div class="save-row">
+                        <span class="save-row-label">{"Slot"}</span>
+                        <input class="slot-input" type="text" value={self.save_state_slot_str.clone()} oninput={ctx.link().callback(|e: InputEvent| Msg::UpdateSaveSlot(crate::dom_util::input_value(&e)))}/>
+                        <button class="save-button" onclick={ctx.link().callback(|_| Msg::SaveState)}>{"Save"}</button>
+                        <button class="save-button" onclick={ctx.link().callback(|_| Msg::LoadState)}>{"Load"}</button>
+                    </div>
+
+                    <div class="key-legend">
+                        <span>{"D-Pad: WASD"}</span>
+                        <span>{"A/B: H/J"}</span>
+                        <span>{"L/R: Q/E"}</span>
+                        <span>{"Start/Select: Enter/Backspace"}</span>
+                        <span>{"Turbo: Space"}</span>
+                    </div>
+                </div>
+            </main>
+        }
+    }
+
+    pub fn view_debug(&self, ctx: &Context<Self>) -> Html {
+        html! {
+            <div class="container-fluid">
+                <div class="row">
+                    {self.view_control(ctx)}
+                </div>
+                <div class="row">
+                     <div class="col-xs-12 col-lg-6 col-xl-6">
+                         <ul class="nav nav-tabs">
+                           <li class="nav-item"><a class={format!("nav-link {}",self.is_menu_tab_active(ActiveMenu::Registers))} href="#" onclick={ctx.link().callback(|e: MouseEvent|{e.prevent_default(); Msg::ToggleMenu(ActiveMenu::Registers)})}>{"Registers/Status"}</a></li>
+                           <li class="nav-item"><a class={format!("nav-link {}",self.is_menu_tab_active(ActiveMenu::IO))} href="#" onclick={ctx.link().callback(|e: MouseEvent|{e.prevent_default(); Msg::ToggleMenu(ActiveMenu::IO)})}>{"IO Registers"}</a></li>
+                           <li class="nav-item"><a class={format!("nav-link {}",self.is_menu_tab_active(ActiveMenu::Graphics))} href="#" onclick={ctx.link().callback(|e: MouseEvent|{e.prevent_default(); Msg::ToggleMenu(ActiveMenu::Graphics)})}>{"Graphics"}</a></li>
+                           <li class="nav-item"><a class={format!("nav-link {}",self.is_menu_tab_active(ActiveMenu::Debug))} href="#" onclick={ctx.link().callback(|e: MouseEvent|{e.prevent_default(); Msg::ToggleMenu(ActiveMenu::Debug)})}>{"Debug"}</a></li>
+                         </ul>
+                         <div class={format!("row {}", self.is_menu_body_active(ActiveMenu::Registers))}>
+                             <div class="col-xs-12 col-lg-6 col-xl-6">
+                                <Status gba={self.gba.clone()}/>
+                                <Cpsr gba={self.gba.clone()}/>
+                            </div>
+
+                            <div class="col-xs-12 col-lg-6 col-xl-6">
+                                <Registers hex={self.hex} gba={self.gba.clone()}/>
+                            </div>
+                         </div>
+                         <div class={format!("row {}", self.is_menu_body_active(ActiveMenu::IO))}>
+                            <div class="col-xs-12 col-lg-12 col-xl-12">
+                                <IORegisters hex={self.hex} gba={self.gba.clone()}/>
+                            </div>
+                         </div>
+                         <div class={format!("row {}", self.is_menu_body_active(ActiveMenu::Graphics))}>
+                                <div class="col-xs-1 col-lg-1 col-xl-1"></div>
+                                <div class="col-xs-5 col-lg-5 col-xl-5 text-center">
+                                    <h5>{"Background Palette"}</h5>
+                                    {self.view_bg_palette()}
+                                </div>
+                                <div class="col-xs-5 col-lg-5 col-xl-5 text-center">
+                                    <h5>{"Object Palette"}</h5>
+                                    {self.view_obj_palette()}
+                                </div>
+                                <div class="col-xs-1 col-lg-1 col-xl-1"></div>
+                        </div>
+                         <div class={format!("row {}", self.is_menu_body_active(ActiveMenu::Debug))}>
+                            <div class="col-xs-12 col-lg-6 col-xl-6 text-center">
+                                <h5>{"Sound"}</h5>
+                                <SoundPanel samples={self.recent_audio_samples.borrow().clone()}/>
+                            </div>
+                            <div class="col-xs-12 col-lg-6 col-xl-6 text-center">
+                                <h5>{"Sprites"}</h5>
+                                <SpritesPanel gba={self.gba.clone()}/>
+                            </div>
+                            <div class="col-xs-12 col-lg-6 col-xl-6 text-center">
+                                <h5>{"Tiles"}</h5>
+                                <TilesPanel gba={self.gba.clone()}/>
+                            </div>
+                            <div class="col-xs-12 col-lg-6 col-xl-6 text-center">
+                                <h5>{"Backgrounds"}</h5>
+                                <BackgroundsPanel gba={self.gba.clone()}/>
+                            </div>
+                         </div>
+                     </div>
+
+                    <div class="col-xs-12 col-xl-6">
+                        <div class="row">
+                            <div class="col-3">
+                                {self.view_range_dis(ctx)}
+                            </div>
+                            <div class="col-9">
+                                {self.view_disassembly()}
+                            </div>
+                        </div>
+                        <MemoryViewer gba={self.gba.clone()} initialized={self.initialized}/>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
     pub fn view_range_dis(&self, ctx: &Context<Self>) -> Html {
         html! {
             <>
