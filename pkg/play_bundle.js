@@ -4,8 +4,9 @@
     var _documentCurrentScript = typeof document !== 'undefined' ? document.currentScript : null;
     /* @ts-self-types="./gba_web_frontend.d.ts" */
 
-    function run_app() {
-        const ret = wasm.run_app();
+
+    function run_player() {
+        const ret = wasm.run_player();
         if (ret[1]) {
             throw takeFromExternrefTable0(ret[0]);
         }
@@ -1133,7 +1134,7 @@
         }
 
         if (module_or_path === undefined) {
-            module_or_path = new URL('gba_web_frontend_bg.wasm', (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('bundle.js', document.baseURI).href));
+            module_or_path = new URL('gba_web_frontend_bg.wasm', (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('play_bundle.js', document.baseURI).href));
         }
         const imports = __wbg_get_imports();
 
@@ -1148,7 +1149,7 @@
 
     async function main() {
        await __wbg_init({ module_or_path: 'pkg/gba_web_frontend_bg.wasm' });
-       run_app();
+       run_player();
     }
     main();
 
