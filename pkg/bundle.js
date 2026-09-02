@@ -1147,7 +1147,7 @@
     }
 
     async function main() {
-       await __wbg_init('pkg/gba_web_frontend_bg.wasm');
+       await __wbg_init({ module_or_path: 'pkg/gba_web_frontend_bg.wasm' });
        run_app();
     }
     main();
