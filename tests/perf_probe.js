@@ -5,7 +5,7 @@ const BIOS_PATH = process.env.GBA_BIOS || 'C:/Users/gnoe2/Projects/GBA/gba-resou
 const ROM_PATH = process.env.GBA_ROM || 'C:/Users/gnoe2/Projects/GBA/gba-resources/roms/Advance Wars (USA).gba';
 
 async function main() {
-    await withPage(PORT, 'play.html', async (page) => {
+    await withPage(PORT, 'index.html#/', async (page) => {
         await page.evaluate(() => {
             window.__rafCount = 0;
             const realRaf = window.requestAnimationFrame.bind(window);

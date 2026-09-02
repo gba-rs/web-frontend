@@ -8,7 +8,7 @@ const ROM_PATH = process.env.GBA_ROM || 'C:/Users/gnoe2/Projects/GBA/gba-resourc
 async function main() {
     let ok = false;
 
-    await withPage(PORT, 'play.html', async (page) => {
+    await withPage(PORT, 'index.html#/', async (page) => {
         await page.waitForSelector('input[type=file]', { state: 'attached', timeout: 5000 });
 
         const fileInputs = page.locator('input[type=file]');

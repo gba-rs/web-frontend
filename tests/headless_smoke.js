@@ -8,7 +8,7 @@ const ROM_PATH = process.env.GBA_ROM || 'C:/Users/gnoe2/Projects/GBA/gba-resourc
 async function main() {
     let ok = false;
 
-    await withPage(PORT, 'index.html', async (page) => {
+    await withPage(PORT, 'index.html#/debug', async (page) => {
         await page.waitForSelector('#inputGroupFile01', { timeout: 5000 });
 
         await page.setInputFiles('#inputGroupFile01', BIOS_PATH);
