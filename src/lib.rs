@@ -1,7 +1,13 @@
 #![recursion_limit="2048"]
 mod app;
+mod audio;
+mod backgrounds_decode;
 mod components;
+mod dom_util;
+mod frame_pacing;
 mod logging;
+mod save_state;
+mod storage;
 
 use wasm_bindgen::prelude::*;
 

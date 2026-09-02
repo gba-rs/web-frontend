@@ -1,5 +1,4 @@
-use yew::{html, Component, ComponentLink, Html, ShouldRender};
-
+use yew::{html, Component, Context, Html};
 
 pub struct NavBar {}
 
@@ -9,15 +8,15 @@ impl Component for NavBar {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
+    fn create(_: &Context<Self>) -> Self {
         NavBar {}
     }
 
-    fn update(&mut self, _: Self::Message) -> ShouldRender {
+    fn update(&mut self, _: &Context<Self>, _: Self::Message) -> bool {
         true
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, _: &Context<Self>) -> Html {
         html! {
             <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
                 <a class="navbar-brand" href="#">{"GBA Emu"}</a>

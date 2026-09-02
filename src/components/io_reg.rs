@@ -1,4 +1,4 @@
-use yew::{html, Component, ComponentLink, Html, ShouldRender};
+use yew::{html, Component, Context, Html};
 use log::info;
 use crate::components::registers::{RegistersProp, RegUpdateType};
 
@@ -7,7 +7,6 @@ pub struct IORegisters {
     updated_reg_hex: String,
     updated_reg_dec: String,
     update_reg_num: u8,
-    link: ComponentLink<Self>,
 }
 
 pub enum Msg {
@@ -20,17 +19,21 @@ impl Component for IORegisters {
     type Message = Msg;
     type Properties = RegistersProp;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         IORegisters {
-            props,
+            props: ctx.props().clone(),
             updated_reg_dec: "".to_string(),
             updated_reg_hex: "".to_string(),
             update_reg_num: 0,
-            link,
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
+        self.props = ctx.props().clone();
+        true
+    }
+
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::StartUpdate(init_string, update_type) => {
                 match update_type {
@@ -85,12 +88,7 @@ impl Component for IORegisters {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.props = props;
-        true
-    }
-
-    fn view(&self) -> Html {
+    fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
             <div class="io-reg">
                 <div id="accordion">
