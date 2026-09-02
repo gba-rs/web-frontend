@@ -18,7 +18,7 @@ use log::{info, error};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use gloo_file::callbacks::{read_as_bytes, FileReader};
-use web_sys::{Event, HtmlInputElement, InputEvent};
+use web_sys::InputEvent;
 
 use crate::components::{
     registers::Registers,
@@ -37,6 +37,8 @@ use crate::components::{
 
 use crate::logging;
 use crate::audio::player::AudioPlayer;
+use crate::audio::push_audio_samples;
+use crate::dom_util::files_from_input;
 use crate::save_state;
 use crate::storage;
 use crate::frame_pacing::{FrameAccumulator, TURBO_MULTIPLIER};
@@ -693,17 +695,3 @@ impl App {
     }
 }
 
-pub fn files_from_input(e: Event) -> Option<web_sys::FileList> {
-    let input: HtmlInputElement = e.target_unchecked_into();
-    input.files()
-}
-
-fn push_audio_samples(gba: &Rc<RefCell<GBA>>, audio_player: &Rc<RefCell<Option<AudioPlayer>>>, recent_samples: &Rc<RefCell<Vec<i16>>>) {
-    let samples = std::mem::take(&mut gba.borrow_mut().apu.sample_buffer);
-    *recent_samples.borrow_mut() = samples.clone();
-    if let Some(player) = audio_player.borrow_mut().as_mut() {
-        if let Err(e) = player.push_samples(&samples) {
-            error!("Failed to push audio samples: {:?}", e);
-        }
-    }
-}

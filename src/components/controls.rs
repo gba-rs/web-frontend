@@ -1,4 +1,5 @@
-use crate::app::{files_from_input, App, Msg, FileLoadType};
+use crate::app::{App, Msg, FileLoadType};
+use crate::dom_util::files_from_input;
 use yew::prelude::*;
 use yew::{html, Context, Html};
 use web_sys::InputEvent;
