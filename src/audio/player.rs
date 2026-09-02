@@ -4,11 +4,13 @@ use web_sys::AudioContext;
 use super::resampler::Resampler;
 
 const SCHEDULING_LOOKAHEAD_SECONDS: f64 = 0.1;
+const FLUSH_THRESHOLD_SAMPLES: usize = 4096;
 
 pub struct AudioPlayer {
     context: AudioContext,
     resampler: Resampler,
     next_start_time: f64,
+    pending: Vec<i16>,
 }
 
 impl AudioPlayer {
@@ -20,6 +22,7 @@ impl AudioPlayer {
             context,
             resampler: Resampler::new(input_rate, output_rate),
             next_start_time,
+            pending: Vec::with_capacity(FLUSH_THRESHOLD_SAMPLES * 2),
         })
     }
 
@@ -32,7 +35,21 @@ impl AudioPlayer {
             return Ok(());
         }
 
-        let resampled = self.resampler.process(samples);
+        self.pending.extend_from_slice(samples);
+        if self.pending.len() < FLUSH_THRESHOLD_SAMPLES {
+            return Ok(());
+        }
+
+        self.flush()
+    }
+
+    pub fn flush(&mut self) -> Result<(), JsValue> {
+        if self.pending.is_empty() {
+            return Ok(());
+        }
+        let pending = std::mem::take(&mut self.pending);
+
+        let resampled = self.resampler.process(&pending);
         let frame_count = resampled.len() / 2;
         if frame_count == 0 {
             return Ok(());
