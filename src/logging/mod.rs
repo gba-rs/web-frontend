@@ -1,41 +1,11 @@
-use log::{Record, Level, Metadata, SetLoggerError};
-use yew::services::console::ConsoleService;
+use log::LevelFilter;
 
-pub struct ConsoleLogger{
-    pub should_log: bool
+pub fn init_logger() {
+    console_error_panic_hook::set_once();
+    console_log::init_with_level(log::Level::Trace).expect("failed to initialize logger");
+    log::set_max_level(LevelFilter::Off);
 }
 
-pub static mut LOGGER: ConsoleLogger = ConsoleLogger{ should_log: false };
-
-impl log::Log for ConsoleLogger {
-    fn enabled(&self, metadata: &Metadata) -> bool {
-        metadata.level() <= Level::Trace
-    }
-
-    fn log(&self, record: &Record) {
-        if self.enabled(record.metadata()) {
-
-            let target = if record.target().len() > 0 {
-                record.target()
-            } else {
-                record.module_path().unwrap_or_default()
-            };
-
-            if !target.contains("yew") {
-                if self.should_log {
-                    ConsoleService::new().log(&format!("[{}][{}] {}", target, record.level(), record.args()));
-                }
-            }
-        }
-    }
-
-    fn flush(&self) {}
-}
-
-pub fn init_logger() -> Result<(), SetLoggerError> {
-    unsafe {
-        log::set_logger(&LOGGER)?;
-    }
-    log::set_max_level(Level::Trace.to_level_filter());
-    Ok(())
+pub fn set_logging_enabled(enabled: bool) {
+    log::set_max_level(if enabled { LevelFilter::Trace } else { LevelFilter::Off });
 }

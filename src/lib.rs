@@ -7,7 +7,8 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub fn run_app() -> Result<(), JsValue> {
-    yew::start_app::<app::App>();
+    logging::init_logger();
+    yew::Renderer::<app::App>::new().render();
 
     Ok(())
 }
