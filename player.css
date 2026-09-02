@@ -1,0 +1,228 @@
+:root {
+    --bg: #0b0d12;
+    --surface: #14171f;
+    --surface-raised: #1b1f2a;
+    --border: #262b38;
+    --text: #e8eaf0;
+    --text-dim: #8b93a7;
+    --accent: #6d5bff;
+    --accent-hover: #8171ff;
+    --danger: #3a3f4d;
+    --danger-hover: #4a5062;
+    --radius: 14px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+}
+
+.player-shell {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.player-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.player-logo {
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+}
+
+.player-nav-link {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.player-nav-link:hover {
+    color: var(--text);
+    border-color: var(--accent);
+}
+
+.player-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+}
+
+.player-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.file-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.file-picker {
+    flex: 1 1 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    background: var(--surface-raised);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+}
+
+.file-picker:hover {
+    border-color: var(--accent);
+}
+
+.file-picker-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+}
+
+.file-picker-name {
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-picker input[type="file"] {
+    display: none;
+}
+
+.player-canvas {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    image-rendering: pixelated;
+    background: #000;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.player-canvas-hidden {
+    display: none;
+}
+
+.transport-row {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.play-button, .pause-button, .save-button {
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 999px;
+    padding: 0.7rem 2rem;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
+}
+
+.play-button {
+    background: var(--accent);
+    color: white;
+}
+
+.play-button:hover:not(:disabled) {
+    background: var(--accent-hover);
+}
+
+.play-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pause-button {
+    background: var(--danger);
+    color: var(--text);
+}
+
+.pause-button:hover {
+    background: var(--danger-hover);
+}
+
+.transport-row button:active {
+    transform: scale(0.97);
+}
+
+.save-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+}
+
+.save-row-label {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+}
+
+.slot-input {
+    width: 3rem;
+    text-align: center;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 0.4rem;
+    font-family: inherit;
+}
+
+.save-button {
+    background: var(--surface-raised);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.5rem 1.25rem;
+    font-size: 0.9rem;
+}
+
+.save-button:hover {
+    border-color: var(--accent);
+}
+
+.key-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 1.25rem;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+}

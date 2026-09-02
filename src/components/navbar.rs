@@ -31,6 +31,9 @@ impl Component for NavBar {
                         <li class="nav-item">
                             <a class="nav-link" href="#">{"Debugger"}<span class="sr-only">{"(current)"}</span></a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="play.html">{"Play"}</a>
+                        </li>
                     </ul>
                 </div>
             </nav>
