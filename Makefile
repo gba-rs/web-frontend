@@ -4,3 +4,6 @@ build:
 
 run: build
 	python -m http.server 8080
+
+test: build
+	npm test
