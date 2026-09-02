@@ -4,7 +4,7 @@
   "description": "Web Frontend for the [gba-emu](https://github.com/gba-rs/gba-emu) hosted on github pages [here](https://gba-rs.github.io/web-frontend/)",
   "main": "main.js",
   "scripts": {
-    "test": "node tests/headless_smoke.js"
+    "test": "node tests/headless_smoke.js && node tests/headless_smoke_player.js"
   },
   "repository": {
     "type": "git",

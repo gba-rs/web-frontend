@@ -13,3 +13,4 @@ Cargo.lock
 
 node_modules/
 tests/screenshot.png
+tests/screenshot_player.png
