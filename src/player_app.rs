@@ -18,7 +18,7 @@ use crate::audio::player::AudioPlayer;
 use crate::audio::push_audio_samples;
 use crate::components::canvas::*;
 use crate::dom_util::{files_from_input, input_value};
-use crate::frame_pacing::{FrameAccumulator, TURBO_MULTIPLIER};
+use crate::frame_pacing::{FrameAccumulator, MAX_CATCHUP_FRAMES, MAX_CATCHUP_FRAMES_TURBO, TURBO_MULTIPLIER};
 use crate::logging;
 use crate::save_state;
 use crate::storage;
@@ -269,7 +269,8 @@ impl Component for PlayerApp {
                         dt *= TURBO_MULTIPLIER;
                     }
 
-                    let frame_count = accumulator.frames_to_run(dt);
+                    let max_frames = if is_turbo { MAX_CATCHUP_FRAMES_TURBO } else { MAX_CATCHUP_FRAMES };
+                    let frame_count = accumulator.frames_to_run(dt, max_frames);
                     for _ in 0..frame_count {
                         gba_clone.borrow_mut().frame();
                         if is_turbo {
