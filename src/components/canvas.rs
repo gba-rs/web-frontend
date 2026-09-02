@@ -19,16 +19,15 @@ pub fn request_animation_frame(f: &Closure<dyn FnMut()>) {
         .expect("should register `requestAnimationFrame` OK");
 }
 
+const SCALE: u32 = 3;
+
 pub fn get_canvas(canvas_id: &str) -> (web_sys::HtmlCanvasElement, web_sys::CanvasRenderingContext2d) {
     let canvas = document().get_element_by_id(canvas_id).unwrap();
     let canvas: web_sys::HtmlCanvasElement = canvas
         .dyn_into::<web_sys::HtmlCanvasElement>()
         .map_err(|_| ())
         .unwrap();
-    canvas.set_width(DISPLAY_WIDTH);
-    canvas.set_height(DISPLAY_HEIGHT);
 
-    // TODO method that takes cavnas id to return tuple of canvas and context
     let context = canvas
         .get_context("2d")
         .unwrap()
@@ -43,18 +42,22 @@ pub fn show_canvas(mut pixels: Vec<u8>) {
     let (canvas, context) = get_canvas("gba-canvas");
     let (canvas2, context2) = get_canvas("gba-canvas2");
 
-    let img_data = ImageData::new_with_u8_clamped_array_and_sh(Clamped(&mut pixels), canvas.width(), canvas.height()).unwrap();
+    let img_data = ImageData::new_with_u8_clamped_array_and_sh(Clamped(&mut pixels), DISPLAY_WIDTH, DISPLAY_HEIGHT).unwrap();
     context2.put_image_data(&img_data, 0.0, 0.0 ).expect("Couldn't put image data into the scaling canvas");
 
-    let scale = 3;
-    canvas.set_width(DISPLAY_WIDTH * scale);
-    canvas.set_height(DISPLAY_HEIGHT * scale);
     context.clear_rect(0.0, 0.0, canvas.width() as f64, canvas.height() as f64);
-    context.draw_image_with_html_canvas_element_and_dw_and_dh(&canvas2, 0.0, 0.0, (DISPLAY_WIDTH * scale) as f64, (DISPLAY_HEIGHT * scale) as f64).expect("Couldn't draw the scaled canvas");
+    context.draw_image_with_html_canvas_element_and_dw_and_dh(&canvas2, 0.0, 0.0, canvas.width() as f64, canvas.height() as f64).expect("Couldn't draw the scaled canvas");
 }
 
 pub fn clear_canvas() {
     let (canvas, context) = get_canvas("gba-canvas");
+    let (canvas2, _) = get_canvas("gba-canvas2");
+
+    canvas2.set_width(DISPLAY_WIDTH);
+    canvas2.set_height(DISPLAY_HEIGHT);
+    canvas.set_width(DISPLAY_WIDTH * SCALE);
+    canvas.set_height(DISPLAY_HEIGHT * SCALE);
+
     context.clear_rect(0.0, 0.0, canvas.width() as f64, canvas.height() as f64);
 }
 
