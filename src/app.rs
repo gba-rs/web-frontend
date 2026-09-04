@@ -660,71 +660,65 @@ impl App {
 
     pub fn view_debug(&self, ctx: &Context<Self>) -> Html {
         html! {
-            <div class="container-fluid">
-                <div class="row">
-                    {self.view_control(ctx)}
-                </div>
-                <div class="row">
-                     <div class="col-xs-12 col-lg-6 col-xl-6">
-                         <ul class="nav nav-tabs">
-                           <li class="nav-item"><a class={format!("nav-link {}",self.is_menu_tab_active(ActiveMenu::Registers))} href="#" onclick={ctx.link().callback(|e: MouseEvent|{e.prevent_default(); Msg::ToggleMenu(ActiveMenu::Registers)})}>{"Registers/Status"}</a></li>
-                           <li class="nav-item"><a class={format!("nav-link {}",self.is_menu_tab_active(ActiveMenu::IO))} href="#" onclick={ctx.link().callback(|e: MouseEvent|{e.prevent_default(); Msg::ToggleMenu(ActiveMenu::IO)})}>{"IO Registers"}</a></li>
-                           <li class="nav-item"><a class={format!("nav-link {}",self.is_menu_tab_active(ActiveMenu::Graphics))} href="#" onclick={ctx.link().callback(|e: MouseEvent|{e.prevent_default(); Msg::ToggleMenu(ActiveMenu::Graphics)})}>{"Graphics"}</a></li>
-                           <li class="nav-item"><a class={format!("nav-link {}",self.is_menu_tab_active(ActiveMenu::Debug))} href="#" onclick={ctx.link().callback(|e: MouseEvent|{e.prevent_default(); Msg::ToggleMenu(ActiveMenu::Debug)})}>{"Debug"}</a></li>
-                         </ul>
-                         <div class={format!("row {}", self.is_menu_body_active(ActiveMenu::Registers))}>
-                             <div class="col-xs-12 col-lg-6 col-xl-6">
+            <div class="debug-shell">
+                {self.view_control(ctx)}
+                <div class="debug-columns">
+                     <div class="debug-column">
+                         <div class="pill-tabs">
+                           <a class={format!("pill-tab {}",self.is_menu_tab_active(ActiveMenu::Registers))} href="#" onclick={ctx.link().callback(|e: MouseEvent|{e.prevent_default(); Msg::ToggleMenu(ActiveMenu::Registers)})}>{"Registers/Status"}</a>
+                           <a class={format!("pill-tab {}",self.is_menu_tab_active(ActiveMenu::IO))} href="#" onclick={ctx.link().callback(|e: MouseEvent|{e.prevent_default(); Msg::ToggleMenu(ActiveMenu::IO)})}>{"IO Registers"}</a>
+                           <a class={format!("pill-tab {}",self.is_menu_tab_active(ActiveMenu::Graphics))} href="#" onclick={ctx.link().callback(|e: MouseEvent|{e.prevent_default(); Msg::ToggleMenu(ActiveMenu::Graphics)})}>{"Graphics"}</a>
+                           <a class={format!("pill-tab {}",self.is_menu_tab_active(ActiveMenu::Debug))} href="#" onclick={ctx.link().callback(|e: MouseEvent|{e.prevent_default(); Msg::ToggleMenu(ActiveMenu::Debug)})}>{"Debug"}</a>
+                         </div>
+                         <div class="debug-columns" hidden={self.active_menu != ActiveMenu::Registers}>
+                             <div class="debug-column">
                                 <Status gba={self.gba.clone()}/>
                                 <Cpsr gba={self.gba.clone()}/>
                             </div>
 
-                            <div class="col-xs-12 col-lg-6 col-xl-6">
+                            <div class="debug-column">
                                 <Registers hex={self.hex} gba={self.gba.clone()}/>
                             </div>
                          </div>
-                         <div class={format!("row {}", self.is_menu_body_active(ActiveMenu::IO))}>
-                            <div class="col-xs-12 col-lg-12 col-xl-12">
-                                <IORegisters hex={self.hex} gba={self.gba.clone()}/>
-                            </div>
+                         <div hidden={self.active_menu != ActiveMenu::IO}>
+                            <IORegisters hex={self.hex} gba={self.gba.clone()}/>
                          </div>
-                         <div class={format!("row {}", self.is_menu_body_active(ActiveMenu::Graphics))}>
-                                <div class="col-xs-1 col-lg-1 col-xl-1"></div>
-                                <div class="col-xs-5 col-lg-5 col-xl-5 text-center">
+                         <div class="debug-columns" hidden={self.active_menu != ActiveMenu::Graphics}>
+                                <div class="debug-column text-center">
                                     <h5>{"Background Palette"}</h5>
                                     {self.view_bg_palette()}
                                 </div>
-                                <div class="col-xs-5 col-lg-5 col-xl-5 text-center">
+                                <div class="debug-column text-center">
                                     <h5>{"Object Palette"}</h5>
                                     {self.view_obj_palette()}
                                 </div>
-                                <div class="col-xs-1 col-lg-1 col-xl-1"></div>
                         </div>
-                         <div class={format!("row {}", self.is_menu_body_active(ActiveMenu::Debug))}>
-                            <div class="col-xs-12 col-lg-6 col-xl-6 text-center">
+                         <div class="debug-columns" hidden={self.active_menu != ActiveMenu::Debug}>
+                            <div class="debug-column text-center">
                                 <h5>{"Sound"}</h5>
                                 <SoundPanel samples={self.recent_audio_samples.borrow().clone()}/>
                             </div>
-                            <div class="col-xs-12 col-lg-6 col-xl-6 text-center">
+                            <div class="debug-column text-center">
                                 <h5>{"Sprites"}</h5>
                                 <SpritesPanel gba={self.gba.clone()}/>
                             </div>
-                            <div class="col-xs-12 col-lg-6 col-xl-6 text-center">
+                            <div class="debug-column text-center">
                                 <h5>{"Tiles"}</h5>
                                 <TilesPanel gba={self.gba.clone()}/>
                             </div>
-                            <div class="col-xs-12 col-lg-6 col-xl-6 text-center">
+                            <div class="debug-column text-center">
                                 <h5>{"Backgrounds"}</h5>
                                 <BackgroundsPanel gba={self.gba.clone()}/>
                             </div>
                          </div>
                      </div>
 
-                    <div class="col-xs-12 col-xl-6">
-                        <div class="row">
-                            <div class="col-3">
+                    <div class="debug-column">
+                        <div class="debug-split">
+                            <div class="debug-split-side">
                                 {self.view_range_dis(ctx)}
                             </div>
-                            <div class="col-9">
+                            <div class="debug-split-main">
                                 {self.view_disassembly()}
                             </div>
                         </div>
@@ -739,27 +733,19 @@ impl App {
         html! {
             <>
                 <h5>{"Disassembly"}</h5>
-                <div class="input-group input-group-sm mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text" id="lower-addon-dis">{"Lower"}</span>
-                    </div>
-                    <input type="text" class="form-control" placeholder="0" oninput={ctx.link().callback(|e: InputEvent| {Msg::UpdateInputString(crate::dom_util::input_value(&e), RangeUpdate::DisassemblyMin)})}/>
+                <div class="field-row">
+                    <span class="field-row-label">{"Lower"}</span>
+                    <input type="text" class="text-input" placeholder="0" oninput={ctx.link().callback(|e: InputEvent| {Msg::UpdateInputString(crate::dom_util::input_value(&e), RangeUpdate::DisassemblyMin)})}/>
                 </div>
-                <div class="input-group input-group-sm mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text" id="upper-addon-dis">{"Upper"}</span>
-                    </div>
-                    <input type="text" class="form-control" placeholder="100" oninput={ctx.link().callback(|e: InputEvent| {Msg::UpdateInputString(crate::dom_util::input_value(&e), RangeUpdate::DisassemblyMax)})}/>
+                <div class="field-row">
+                    <span class="field-row-label">{"Upper"}</span>
+                    <input type="text" class="text-input" placeholder="100" oninput={ctx.link().callback(|e: InputEvent| {Msg::UpdateInputString(crate::dom_util::input_value(&e), RangeUpdate::DisassemblyMax)})}/>
                 </div>
-                <div class="input-group input-group-sm mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text" id="follow-addon">{"Follow PC"}</span>
-                        <div class="input-group-text">
-                            <input type="checkbox" checked={self.follow_pc} onclick={ctx.link().callback(|_|{Msg::ToggleFollow})}/>
-                        </div>
-                    </div>
-                </div>
-                <button class="btn btn-outline-primary" onclick={ctx.link().callback(|_|{Msg::UpdateRange(RangeUpdate::DisassemblyMax)})}>{"Search"}</button>
+                <label class="toggle-row">
+                    <span class="toggle-row-label">{"Follow PC"}</span>
+                    <input type="checkbox" checked={self.follow_pc} onclick={ctx.link().callback(|_|{Msg::ToggleFollow})}/>
+                </label>
+                <button class="btn" onclick={ctx.link().callback(|_|{Msg::UpdateRange(RangeUpdate::DisassemblyMax)})}>{"Search"}</button>
             </>
         }
     }
@@ -767,13 +753,6 @@ impl App {
     pub fn is_menu_tab_active(&self, menu_item: ActiveMenu) -> String {
         if menu_item == self.active_menu {
             return format!("active");
-        }
-        return format!("");
-    }
-
-    pub fn is_menu_body_active(&self, menu_item: ActiveMenu) -> String {
-        if menu_item != self.active_menu {
-            return format!("d-none");
         }
         return format!("");
     }

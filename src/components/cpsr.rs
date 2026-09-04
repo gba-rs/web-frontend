@@ -86,78 +86,47 @@ impl Component for Cpsr {
         let control_bits = self.props.gba.borrow().cpu.cpsr.control_bits.clone();
 
         html! {
-            <div class="col-12">
+            <div class="cpsr-panel">
                 <h4>{"Current Program Status Register"}</h4>
-                <div class="input-group m-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text cpsr-text">{&format!("Carry - {:?}", flags.carry)}</span>
-                        <div class="input-group-text">
-                            <input type="checkbox" checked={flags.carry} onclick={ctx.link().callback(|_|{Msg::UpdateFlag(UpdateFlagType::Carry)})}/>
-                        </div>
-                    </div>
-                </div>
+                <label class="toggle-row">
+                    <span class="toggle-row-label">{&format!("Carry - {:?}", flags.carry)}</span>
+                    <input type="checkbox" checked={flags.carry} onclick={ctx.link().callback(|_|{Msg::UpdateFlag(UpdateFlagType::Carry)})}/>
+                </label>
 
-                <div class="input-group m-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text cpsr-text">{&format!("Negative - {:?}", flags.negative)}</span>
-                        <div class="input-group-text">
-                            <input type="checkbox" checked={flags.negative} onclick={ctx.link().callback(|_|{Msg::UpdateFlag(UpdateFlagType::Negative)})}/>
-                        </div>
-                    </div>
-                </div>
+                <label class="toggle-row">
+                    <span class="toggle-row-label">{&format!("Negative - {:?}", flags.negative)}</span>
+                    <input type="checkbox" checked={flags.negative} onclick={ctx.link().callback(|_|{Msg::UpdateFlag(UpdateFlagType::Negative)})}/>
+                </label>
 
-                <div class="input-group m-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text cpsr-text">{&format!("Signed Overflow - {:?}", flags.signed_overflow)}</span>
-                        <div class="input-group-text">
-                            <input type="checkbox" checked={flags.signed_overflow} onclick={ctx.link().callback(|_|{Msg::UpdateFlag(UpdateFlagType::SignedOverflow)})}/>
-                        </div>
-                    </div>
-                </div>
+                <label class="toggle-row">
+                    <span class="toggle-row-label">{&format!("Signed Overflow - {:?}", flags.signed_overflow)}</span>
+                    <input type="checkbox" checked={flags.signed_overflow} onclick={ctx.link().callback(|_|{Msg::UpdateFlag(UpdateFlagType::SignedOverflow)})}/>
+                </label>
 
-                <div class="input-group m-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text cpsr-text">{&format!("Zero - {:?}", flags.zero)}</span>
-                        <div class="input-group-text">
-                            <input type="checkbox" checked={flags.zero} onclick={ctx.link().callback(|_|{Msg::UpdateFlag(UpdateFlagType::Zero)})}/>
-                        </div>
-                    </div>
-                </div>
+                <label class="toggle-row">
+                    <span class="toggle-row-label">{&format!("Zero - {:?}", flags.zero)}</span>
+                    <input type="checkbox" checked={flags.zero} onclick={ctx.link().callback(|_|{Msg::UpdateFlag(UpdateFlagType::Zero)})}/>
+                </label>
 
-                <div class="input-group m-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text cpsr-text">{&format!("FIQ Disable - {:?}", control_bits.fiq_disable)}</span>
-                        <div class="input-group-text">
-                            <input type="checkbox" checked={control_bits.fiq_disable} onclick={ctx.link().callback(|_|{Msg::UpdateFlag(UpdateFlagType::FiqDisable)})}/>
-                        </div>
-                    </div>
-                </div>
+                <label class="toggle-row">
+                    <span class="toggle-row-label">{&format!("FIQ Disable - {:?}", control_bits.fiq_disable)}</span>
+                    <input type="checkbox" checked={control_bits.fiq_disable} onclick={ctx.link().callback(|_|{Msg::UpdateFlag(UpdateFlagType::FiqDisable)})}/>
+                </label>
 
-                <div class="input-group m-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text cpsr-text">{&format!("IRQ Disable - {:?}", control_bits.irq_disable)}</span>
-                        <div class="input-group-text">
-                            <input type="checkbox" checked={control_bits.irq_disable} onclick={ctx.link().callback(|_|{Msg::UpdateFlag(UpdateFlagType::IrqDisable)})}/>
-                        </div>
-                    </div>
-                </div>
+                <label class="toggle-row">
+                    <span class="toggle-row-label">{&format!("IRQ Disable - {:?}", control_bits.irq_disable)}</span>
+                    <input type="checkbox" checked={control_bits.irq_disable} onclick={ctx.link().callback(|_|{Msg::UpdateFlag(UpdateFlagType::IrqDisable)})}/>
+                </label>
 
-                <div class="input-group m-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text cpsr-text">{&format!("State Bit - {:?}", control_bits.state_bit)}</span>
-                        <div class="input-group-text">
-                            <input type="checkbox" checked={control_bits.state_bit} onclick={ctx.link().callback(|_|{Msg::UpdateFlag(UpdateFlagType::StateBit)})}/>
-                        </div>
-                    </div>
-                </div>
+                <label class="toggle-row">
+                    <span class="toggle-row-label">{&format!("State Bit - {:?}", control_bits.state_bit)}</span>
+                    <input type="checkbox" checked={control_bits.state_bit} onclick={ctx.link().callback(|_|{Msg::UpdateFlag(UpdateFlagType::StateBit)})}/>
+                </label>
 
-                <div class="input-group m-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text cpsr-text">{&format!("Mode Bits - {:b}", control_bits.mode_bits)}</span>
-                    </div>
+                <div class="toggle-row">
+                    <span class="toggle-row-label">{&format!("Mode Bits - {:b}", control_bits.mode_bits)}</span>
                 </div>
             </div>
-            
         }
     }
 }

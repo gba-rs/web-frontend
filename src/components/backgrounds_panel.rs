@@ -45,9 +45,9 @@ impl Component for BackgroundsPanel {
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
-            <div class="row">
+            <div class="thumbnail-grid">
                 { for (0..4).map(|bg_number| html! {
-                    <div class="col-6 text-center">
+                    <div class="thumbnail-cell text-center">
                         <div>{format!("BG{}", bg_number)}</div>
                         <canvas ref={self.canvas_refs[bg_number].clone()} width={THUMB_W.to_string()} height={THUMB_H.to_string()}></canvas>
                     </div>

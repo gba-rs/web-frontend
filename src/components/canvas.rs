@@ -76,7 +76,7 @@ impl App {
     pub fn view_canvas(&self) -> Html {
         html! {
             <>
-                <canvas id="gba-canvas"></canvas>
+                <canvas id="gba-canvas" class="app-canvas"></canvas>
                 <canvas id="gba-canvas2" style="display:none;"></canvas>
             </>
         }

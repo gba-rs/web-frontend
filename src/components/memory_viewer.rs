@@ -120,11 +120,11 @@ impl Component for MemoryViewer {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         html!{
-            <div class="row">
-                <div class="col-3">
+            <div class="debug-split">
+                <div class="debug-split-side">
                     {self.view_memory_range(ctx)}
                 </div>
-                <div class="col-9">
+                <div class="debug-split-main">
                     {self.view_memory(ctx)}
                 </div>
             </div>
@@ -137,19 +137,15 @@ impl MemoryViewer {
         html! {
             <>
                 <h5>{"Memory"}</h5>
-                <div class="input-group input-group-sm mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text" id="lower-addon-mem">{"Lower"}</span>
-                    </div>
-                    <input type="text" class="form-control" placeholder="0" oninput={ctx.link().callback(|e: InputEvent| {Msg::UpdateString(input_value(&e), StringUpdateType::MinString)})}/>
+                <div class="field-row">
+                    <span class="field-row-label">{"Lower"}</span>
+                    <input type="text" class="text-input" placeholder="0" oninput={ctx.link().callback(|e: InputEvent| {Msg::UpdateString(input_value(&e), StringUpdateType::MinString)})}/>
                 </div>
-                <div class="input-group input-group-sm mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text" id="upper-addon-mem">{"Upper"}</span>
-                    </div>
-                    <input type="text" class="form-control" placeholder="100" oninput={ctx.link().callback(|e: InputEvent| {Msg::UpdateString(input_value(&e), StringUpdateType::MaxString)})}/>
+                <div class="field-row">
+                    <span class="field-row-label">{"Upper"}</span>
+                    <input type="text" class="text-input" placeholder="100" oninput={ctx.link().callback(|e: InputEvent| {Msg::UpdateString(input_value(&e), StringUpdateType::MaxString)})}/>
                 </div>
-                <button class="btn btn-outline-primary" onclick={ctx.link().callback(|_|{Msg::UpdateRange})}>{"Search"}</button>
+                <button class="btn" onclick={ctx.link().callback(|_|{Msg::UpdateRange})}>{"Search"}</button>
             </>
         }
     }
