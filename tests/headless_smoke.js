@@ -9,7 +9,7 @@ async function main() {
     let ok = false;
 
     await withPage(PORT, 'index.html#/debug', async (page) => {
-        await page.waitForSelector('#inputGroupFile01', { timeout: 5000 });
+        await page.waitForSelector('#inputGroupFile01', { state: 'attached', timeout: 5000 });
 
         await page.setInputFiles('#inputGroupFile01', BIOS_PATH);
         await page.setInputFiles('#inputGroupFile02', ROM_PATH);
