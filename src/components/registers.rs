@@ -116,7 +116,7 @@ impl Component for Registers {
         html! {
             <div>
                 <h4>{"Registers"}</h4>
-                <table class="table register-table">
+                <table class="data-table">
                     <thead>
                         <tr>
                             <th scope="col">{"Reg"}</th>

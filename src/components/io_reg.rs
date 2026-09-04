@@ -92,103 +92,54 @@ impl Component for IORegisters {
         html! {
             <div class="io-reg">
                 <div id="accordion">
-                  <div class="io-reg-section">
-                    <div class="io-reg-section-header" id="headingOne">
-                      <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                        {"LCD"}
-                      </button>
-                    </div>
+                  <details class="io-reg-section">
+<summary class="io-reg-section-header">{"LCD"}</summary>
 
-                    <div id="collapseOne" class="io-reg-section-body collapse" aria-labelledby="headingOne">
-                      <div >
                           {self.view_lcd()}
-                      </div>
-                    </div>
-                  </div>
-                  <div class="io-reg-section">
-                    <div class="io-reg-section-header" id="headingTwo">
-                      <button class="btn btn-link text-dark collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                        {"Sound"}
-                      </button>
-                    </div>
-                    <div id="collapseTwo" class="io-reg-section-body collapse" aria-labelledby="headingTwo">
-                      <div >
+                      
+</details>
+                  <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Sound"}</summary>
+
                           {"Collapsible Group Item #2"}
-                      </div>
-                    </div>
-                  </div>
-                  <div class="io-reg-section">
-                    <div class="io-reg-section-header" id="headingThree">
-                      <button class="btn btn-link text-dark collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                        {"DMA"}
-                      </button>
-                    </div>
-                    <div id="collapseThree" class="io-reg-section-body collapse" aria-labelledby="headingThree">
-                      <div >
+                      
+</details>
+                  <details class="io-reg-section">
+<summary class="io-reg-section-header">{"DMA"}</summary>
+
                           {"Collapsible Group Item #3"}
-                      </div>
-                    </div>
-                  </div>
-                  <div class="io-reg-section">
-                    <div class="io-reg-section-header" id="headingFour">
-                      <button class="btn btn-link text-dark collapsed" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-                        {"Timer"}
-                      </button>
-                    </div>
-                    <div id="collapseFour" class="io-reg-section-body collapse" aria-labelledby="headingFour">
-                      <div >
+                      
+</details>
+                  <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Timer"}</summary>
+
                           {"Collapsible Group Item #3"}
-                      </div>
-                    </div>
-                  </div>
-                  <div class="io-reg-section">
-                    <div class="io-reg-section-header" id="headingFive">
-                      <button class="btn btn-link text-dark collapsed" data-toggle="collapse" data-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
-                        {"Serial Communication 1"}
-                      </button>
-                    </div>
-                    <div id="collapseFive" class="io-reg-section-body collapse" aria-labelledby="headingFive">
-                      <div >
+                      
+</details>
+                  <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Serial Communication 1"}</summary>
+
                           {"Collapsible Group Item #3"}
-                      </div>
-                    </div>
-                  </div>
-                  <div class="io-reg-section">
-                    <div class="io-reg-section-header" id="headingSix">
-                      <button class="btn btn-link text-dark collapsed" data-toggle="collapse" data-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
-                        {"Keypad Input"}
-                      </button>
-                    </div>
-                    <div id="collapseSix" class="io-reg-section-body collapse" aria-labelledby="headingSix">
-                      <div >
+                      
+</details>
+                  <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Keypad Input"}</summary>
+
                           {self.view_keypad_input()}
-                      </div>
-                    </div>
-                  </div>
-                  <div class="io-reg-section">
-                    <div class="io-reg-section-header" id="headingSeven">
-                      <button class="btn btn-link text-dark collapsed" data-toggle="collapse" data-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven">
-                        {"Serial Communication 2"}
-                      </button>
-                    </div>
-                    <div id="collapseSeven" class="io-reg-section-body collapse" aria-labelledby="headingSeven">
-                      <div >
+                      
+</details>
+                  <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Serial Communication 2"}</summary>
+
                           {"Collapsible Group Item #3"}
-                      </div>
-                    </div>
-                  </div>
-                  <div class="io-reg-section">
-                    <div class="io-reg-section-header" id="headingEight">
-                      <button class="btn btn-link text-dark collapsed" data-toggle="collapse" data-target="#collapseEight" aria-expanded="false" aria-controls="collapseEight">
-                        {"Interrupt, Waitstate, and Power-Down"}
-                      </button>
-                    </div>
-                    <div id="collapseEight" class="io-reg-section-body collapse" aria-labelledby="headingEight">
-                      <div >
+                      
+</details>
+                  <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Interrupt, Waitstate, and Power-Down"}</summary>
+
                           {self.view_interrupt_waitstate_powerdown()}
-                      </div>
-                    </div>
-                  </div>
+                      
+</details>
                 </div>
             </div>
         }

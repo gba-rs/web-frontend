@@ -4,19 +4,10 @@ use crate::components::io_reg::{IORegisters};
 impl IORegisters {
     pub fn view_interrupt_master_enable_register(&self) -> Html {
         html! {
-            <div class="io-reg-section">
-                <div class="io-reg-section-header" id="interrupt-master-enable-register-heading">
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#interrupt-master-enable-register"
-                                aria-expanded="true" aria-controls="interrupt-master-enable-register">
-                            {"Interrupt Master Enable Register"}
-                        </button>
-                    </h5>
-                </div>
+            <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Interrupt Master Enable Register"}</summary>
 
-                <div id="interrupt-master-enable-register" class="io-reg-section-body collapse" aria-labelledby="interrupt-master-enable-register-heading">
-                    <div >
-                        <table class="table register-table">
+                        <table class="data-table">
                             <thead>
                             <tr>
                                 <th scope="col">{"Field"}</th>
@@ -30,27 +21,17 @@ impl IORegisters {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
+                    
+</details>
         }
     }
 
     pub fn view_interrupt_enable_register(&self) -> Html {
         html! {
-            <div class="io-reg-section">
-                <div class="io-reg-section-header" id="interrupt-enable-register-heading">
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#interrupt-enable-register"
-                                aria-expanded="true" aria-controls="interrupt-enable-register-register">
-                            {"Interrupt Enable Register"}
-                        </button>
-                    </h5>
-                </div>
+            <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Interrupt Enable Register"}</summary>
 
-                <div id="interrupt-enable-register" class="io-reg-section-body collapse" aria-labelledby="interrupt-enable-register-heading">
-                    <div >
-                        <table class="table register-table">
+                        <table class="data-table">
                             <thead>
                             <tr>
                                 <th scope="col">{"Field"}</th>
@@ -116,27 +97,17 @@ impl IORegisters {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
+                    
+</details>
         }
     }
 
     pub fn view_interrupt_request_flags(&self) -> Html {
         html! {
-            <div class="io-reg-section">
-                <div class="io-reg-section-header" id="interrupt-request-flags-heading">
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#interrupt-request-flags"
-                                aria-expanded="true" aria-controls="interrupt-request-flags">
-                            {"Interrupt Request Flags"}
-                        </button>
-                    </h5>
-                </div>
+            <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Interrupt Request Flags"}</summary>
 
-                <div id="interrupt-request-flags" class="io-reg-section-body collapse" aria-labelledby="interrupt-request-flags-heading">
-                    <div >
-                        <table class="table register-table">
+                        <table class="data-table">
                             <thead>
                             <tr>
                                 <th scope="col">{"Field"}</th>
@@ -202,27 +173,17 @@ impl IORegisters {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
+                    
+</details>
         }
     }
 
     pub fn view_wait_state(&self) -> Html {
         html! {
-            <div class="io-reg-section">
-                <div class="io-reg-section-header" id="wait-state-heading">
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#wait-state"
-                                aria-expanded="true" aria-controls="wait-state">
-                            {"Wait State"}
-                        </button>
-                    </h5>
-                </div>
+            <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Wait State"}</summary>
 
-                <div id="wait-state" class="io-reg-section-body collapse" aria-labelledby="wait-state-heading">
-                    <div >
-                        <table class="table register-table">
+                        <table class="data-table">
                             <thead>
                             <tr>
                                 <th scope="col">{"Field"}</th>
@@ -272,9 +233,8 @@ impl IORegisters {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
+                    
+</details>
         }
     }
 }
