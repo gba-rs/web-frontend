@@ -46,6 +46,7 @@ features = [
   'GainNode',
   'HtmlCanvasElement',
   'HtmlInputElement',
+  'HtmlSelectElement',
   'ImageData',
   'KeyboardEvent',
   'Performance',

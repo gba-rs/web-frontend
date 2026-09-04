@@ -4,6 +4,7 @@ use gba_emulator::gba::GBA;
 use gba_emulator::cpu::cpu::{InstructionSet, OperatingMode};
 use std::rc::Rc;
 use std::cell::RefCell;
+use web_sys::HtmlSelectElement;
 
 pub struct Status {
     props: StatusProp,
@@ -53,31 +54,44 @@ impl Component for Status {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+        let instruction_set = self.props.gba.borrow().cpu.get_instruction_set();
+        let operating_mode = self.props.gba.borrow().cpu.get_operating_mode();
+
         html! {
-            <div>
+            <div class="status-panel">
                 <h4>{"Status"}</h4>
-                <div class="dropdown m-2">
-                    <button class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown">
-                        {&format!("{:?}", self.props.gba.borrow().cpu.get_instruction_set())}
-                    </button>
-                    <div class="dropdown-menu">
-                        <button class="dropdown-item" type="button" onclick={ctx.link().callback(|_|{Msg::UpdateInstructionSet(InstructionSet::Arm)})}>{"Arm"}</button>
-                        <button class="dropdown-item" type="button" onclick={ctx.link().callback(|_|{Msg::UpdateInstructionSet(InstructionSet::Thumb)})}>{"Thumb"}</button>
-                    </div>
+                <div class="select-row">
+                    <span class="select-row-label">{"Instruction Set"}</span>
+                    <select class="select-control" onchange={ctx.link().callback(|e: Event| {
+                        let value = e.target_unchecked_into::<HtmlSelectElement>().value();
+                        Msg::UpdateInstructionSet(if value == "Thumb" { InstructionSet::Thumb } else { InstructionSet::Arm })
+                    })}>
+                        <option value="Arm" selected={instruction_set == InstructionSet::Arm}>{"Arm"}</option>
+                        <option value="Thumb" selected={instruction_set == InstructionSet::Thumb}>{"Thumb"}</option>
+                    </select>
                 </div>
-                <div class="dropdown m-2">
-                    <button class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown">
-                        {&format!("{:?}", self.props.gba.borrow().cpu.get_operating_mode())}
-                    </button>
-                    <div class="dropdown-menu">
-                        <button class="dropdown-item" type="button" onclick={ctx.link().callback(|_|{Msg::UpdateOperatingMode(OperatingMode::System)})}>{"System"}</button>
-                        <button class="dropdown-item" type="button" onclick={ctx.link().callback(|_|{Msg::UpdateOperatingMode(OperatingMode::User)})}>{"User"}</button>
-                        <button class="dropdown-item" type="button" onclick={ctx.link().callback(|_|{Msg::UpdateOperatingMode(OperatingMode::FastInterrupt)})}>{"Fast Interrupt"}</button>
-                        <button class="dropdown-item" type="button" onclick={ctx.link().callback(|_|{Msg::UpdateOperatingMode(OperatingMode::Supervisor)})}>{"Supervisor"}</button>
-                        <button class="dropdown-item" type="button" onclick={ctx.link().callback(|_|{Msg::UpdateOperatingMode(OperatingMode::Abort)})}>{"Abort"}</button>
-                        <button class="dropdown-item" type="button" onclick={ctx.link().callback(|_|{Msg::UpdateOperatingMode(OperatingMode::Interrupt)})}>{"Interrupt"}</button>
-                        <button class="dropdown-item" type="button" onclick={ctx.link().callback(|_|{Msg::UpdateOperatingMode(OperatingMode::Undefined)})}>{"Undefined"}</button>
-                    </div>
+                <div class="select-row">
+                    <span class="select-row-label">{"Operating Mode"}</span>
+                    <select class="select-control" onchange={ctx.link().callback(|e: Event| {
+                        let value = e.target_unchecked_into::<HtmlSelectElement>().value();
+                        Msg::UpdateOperatingMode(match value.as_str() {
+                            "User" => OperatingMode::User,
+                            "FastInterrupt" => OperatingMode::FastInterrupt,
+                            "Supervisor" => OperatingMode::Supervisor,
+                            "Abort" => OperatingMode::Abort,
+                            "Interrupt" => OperatingMode::Interrupt,
+                            "Undefined" => OperatingMode::Undefined,
+                            _ => OperatingMode::System,
+                        })
+                    })}>
+                        <option value="System" selected={operating_mode == OperatingMode::System}>{"System"}</option>
+                        <option value="User" selected={operating_mode == OperatingMode::User}>{"User"}</option>
+                        <option value="FastInterrupt" selected={operating_mode == OperatingMode::FastInterrupt}>{"Fast Interrupt"}</option>
+                        <option value="Supervisor" selected={operating_mode == OperatingMode::Supervisor}>{"Supervisor"}</option>
+                        <option value="Abort" selected={operating_mode == OperatingMode::Abort}>{"Abort"}</option>
+                        <option value="Interrupt" selected={operating_mode == OperatingMode::Interrupt}>{"Interrupt"}</option>
+                        <option value="Undefined" selected={operating_mode == OperatingMode::Undefined}>{"Undefined"}</option>
+                    </select>
                 </div>
             </div>
         }
