@@ -13,7 +13,7 @@ npm install --global rollup
 
 ### Build
 
-Run `make build` to build the wasm package and the bundle. This requires `make` and `sed`
+Run `make build` to build the wasm package and the bundle. This requires `make`
 
 ### Run local
 
