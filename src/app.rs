@@ -75,6 +75,10 @@ pub struct App {
     db: Rc<RefCell<Option<Database>>>,
     pub save_state_slot_str: String,
     pub recent_audio_samples: Rc<RefCell<Vec<i16>>>,
+    pub view_mode: ViewMode,
+    pub auto_spin: bool,
+    pub lid_angle: u32,
+    pub reset_nonce: u32,
 }
 
 pub enum RangeUpdate {
@@ -113,6 +117,35 @@ pub enum Msg {
     LoadState,
     StateLoaded(GBA),
     BatterySaveLoaded(Vec<u8>),
+    SetViewMode(ViewMode),
+    ToggleAutoSpin,
+    SetLidAngle(String),
+    ResetView,
+}
+
+#[derive(PartialEq, Clone, Copy)]
+pub enum ViewMode {
+    Flat,
+    Gba,
+    GbaSp,
+}
+
+impl ViewMode {
+    pub fn slug(self) -> &'static str {
+        match self {
+            ViewMode::Flat => "flat",
+            ViewMode::Gba => "gba",
+            ViewMode::GbaSp => "sp",
+        }
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            ViewMode::Flat => "2D",
+            ViewMode::Gba => "3D GBA",
+            ViewMode::GbaSp => "3D GBA SP",
+        }
+    }
 }
 
 #[derive(PartialEq)]
@@ -173,6 +206,10 @@ impl Component for App {
             db,
             save_state_slot_str: "1".to_string(),
             recent_audio_samples: Rc::new(RefCell::new(Vec::new())),
+            view_mode: ViewMode::Flat,
+            auto_spin: true,
+            lid_angle: 116,
+            reset_nonce: 0,
         }
     }
 
@@ -571,6 +608,24 @@ impl Component for App {
                 self.gba.borrow_mut().load_save_file(&bytes);
                 true
             }
+            Msg::SetViewMode(mode) => {
+                self.view_mode = mode;
+                true
+            }
+            Msg::ToggleAutoSpin => {
+                self.auto_spin = !self.auto_spin;
+                true
+            }
+            Msg::SetLidAngle(value) => {
+                if let Ok(v) = value.parse::<u32>() {
+                    self.lid_angle = v.min(150);
+                }
+                true
+            }
+            Msg::ResetView => {
+                self.reset_nonce = self.reset_nonce.wrapping_add(1);
+                true
+            }
         }
     }
 
@@ -589,7 +644,7 @@ impl Component for App {
                 <div class="app-shell">
                     {self.view_nav(ctx)}
                     <div class="app-canvas-wrap">
-                        {self.view_canvas()}
+                        {self.view_canvas(ctx)}
                     </div>
                     <Switch<Route> render={switch}/>
                 </div>

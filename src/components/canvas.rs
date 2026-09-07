@@ -1,5 +1,6 @@
-use crate::app::App;
-use yew::{html, Html};
+use crate::app::{App, Msg, ViewMode};
+use yew::{html, Context, Html};
+use web_sys::InputEvent;
 use web_sys::ImageData;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::{JsCast, Clamped};
@@ -73,12 +74,56 @@ pub fn convert_frame_to_u8(vec: &Vec<u32>) -> Vec<u8> {
 }
 
 impl App {
-    pub fn view_canvas(&self) -> Html {
+    pub fn view_canvas(&self, ctx: &Context<Self>) -> Html {
+        let is_3d = self.view_mode != ViewMode::Flat;
+
+        let option = |mode: ViewMode| -> Html {
+            let active = if self.view_mode == mode { "view-option active" } else { "view-option" };
+            html! {
+                <button class={active} onclick={ctx.link().callback(move |_| Msg::SetViewMode(mode))}>
+                    {mode.label()}
+                </button>
+            }
+        };
+
         html! {
-            <>
-                <canvas id="gba-canvas" class="app-canvas"></canvas>
-                <canvas id="gba-canvas2" style="display:none;"></canvas>
-            </>
+            <div class="gba-stage">
+                <div class="gba-body"
+                     data-mode={self.view_mode.slug()}
+                     data-spin={if self.auto_spin { "on" } else { "off" }}
+                     data-lid={self.lid_angle.to_string()}
+                     data-reset={self.reset_nonce.to_string()}>
+                    <canvas id="gba-3d" class="gba-3d-canvas"></canvas>
+                    <canvas id="gba-canvas" class="app-canvas"></canvas>
+                    <canvas id="gba-canvas2" style="display:none;"></canvas>
+                </div>
+
+                <div class="view-panel">
+                    <div class="view-switch">
+                        {option(ViewMode::Flat)}
+                        {option(ViewMode::Gba)}
+                        {option(ViewMode::GbaSp)}
+                    </div>
+
+                    <div class="view-tools" hidden={!is_3d}>
+                        <button class="view-tool" onclick={ctx.link().callback(|_| Msg::ResetView)}>
+                            {"Reset view"}
+                        </button>
+                        <button class="view-tool" onclick={ctx.link().callback(|_| Msg::ToggleAutoSpin)}>
+                            {if self.auto_spin { "Auto-spin: on" } else { "Auto-spin: off" }}
+                        </button>
+                        <label class="view-slider" hidden={self.view_mode != ViewMode::GbaSp}>
+                            <span>{"Lid"}</span>
+                            <input type="range" min="0" max="150" value={self.lid_angle.to_string()}
+                                oninput={ctx.link().callback(|e: InputEvent| Msg::SetLidAngle(crate::dom_util::input_value(&e)))}/>
+                        </label>
+                    </div>
+
+                    <p class="view-hint" hidden={!is_3d}>
+                        {"Drag to rotate · Scroll to zoom · Shift-drag to pan · Double-click to reset"}
+                    </p>
+                </div>
+            </div>
         }
     }
 }
