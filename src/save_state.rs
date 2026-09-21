@@ -10,12 +10,22 @@ pub fn rom_content_key(rom_bytes: &[u8]) -> u64 {
     hasher.finish()
 }
 
+#[cfg(test)]
 pub fn save_state_key(rom_bytes: &[u8], slot: u8) -> String {
-    format!("save-state:{:x}:slot{}", rom_content_key(rom_bytes), slot)
+    save_state_key_from_id(rom_content_key(rom_bytes), slot)
 }
 
+#[cfg(test)]
 pub fn battery_save_key(rom_bytes: &[u8]) -> String {
-    format!("battery-save:{:x}", rom_content_key(rom_bytes))
+    battery_save_key_from_id(rom_content_key(rom_bytes))
+}
+
+pub fn save_state_key_from_id(id: u64, slot: u8) -> String {
+    format!("save-state:{:x}:slot{}", id, slot)
+}
+
+pub fn battery_save_key_from_id(id: u64) -> String {
+    format!("battery-save:{:x}", id)
 }
 
 pub fn serialize_gba(gba: &GBA) -> Result<Vec<u8>, bincode::Error> {
@@ -34,6 +44,14 @@ pub fn deserialize_gba(bytes: &[u8], bios: &Vec<u8>, rom: &Vec<u8>) -> Result<GB
 mod tests {
     use super::*;
     use gba_emulator::gamepak::GamePack;
+
+    #[test]
+    fn cached_identifiers_keep_existing_storage_keys() {
+        let rom = [1, 2, 3, 4];
+        let id = rom_content_key(&rom);
+        assert_eq!(battery_save_key(&rom), battery_save_key_from_id(id));
+        assert_eq!(save_state_key(&rom, 3), save_state_key_from_id(id, 3));
+    }
 
     #[test]
     fn rom_content_key_is_stable_for_the_same_bytes() {

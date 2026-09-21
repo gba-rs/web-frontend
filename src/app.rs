@@ -79,6 +79,13 @@ pub struct App {
     pub auto_spin: bool,
     pub lid_angle: u32,
     pub reset_nonce: u32,
+    rom_key: u64,
+    load_generation: u64,
+    run_generation: u64,
+    animation_frame: Option<Closure<dyn FnMut(f64)>>,
+    animation_request: Option<i32>,
+    last_frame_time: Option<f64>,
+    accumulator: FrameAccumulator,
 }
 
 pub enum RangeUpdate {
@@ -115,8 +122,9 @@ pub enum Msg {
     UpdateSaveSlot(String),
     SaveState,
     LoadState,
-    StateLoaded(GBA),
-    BatterySaveLoaded(Vec<u8>),
+    StateLoaded(u64, GBA),
+    BatterySaveLoaded(u64, Vec<u8>),
+    AnimationFrame(u64, f64),
     SetViewMode(ViewMode),
     ToggleAutoSpin,
     SetLidAngle(String),
@@ -210,6 +218,13 @@ impl Component for App {
             auto_spin: true,
             lid_angle: 116,
             reset_nonce: 0,
+            rom_key: 0,
+            load_generation: 0,
+            run_generation: 0,
+            animation_frame: None,
+            animation_request: None,
+            last_frame_time: None,
+            accumulator: FrameAccumulator::new(),
         }
     }
 
@@ -217,7 +232,11 @@ impl Component for App {
         match msg {
             Msg::LoadedRom(name, bytes) => {
                 self.file_readers.remove(&name);
-                self.game_pack.rom = bytes;
+                self.stop_animation();
+                self.load_generation = self.load_generation.wrapping_add(1);
+                self.rom_key = save_state::rom_content_key(&bytes);
+                self.game_pack = GamePack::from_bytes(bytes, std::mem::take(&mut self.game_pack.bios));
+                self.save.clear();
                 self.rom_name = name;
                 self.disassembled = false;
                 self.initialized = false;
@@ -225,6 +244,8 @@ impl Component for App {
             }
             Msg::LoadedBios(name, bytes) => {
                 self.file_readers.remove(&name);
+                self.stop_animation();
+                self.load_generation = self.load_generation.wrapping_add(1);
                 self.game_pack.bios = bytes;
                 self.bios_name = name;
                 self.initialized = false;
@@ -237,8 +258,9 @@ impl Component for App {
                 true
             }
             Msg::Init => {
-                self.game_pack.backup_type = GamePack::detect_backup_type(&self.game_pack.rom);
-                self.gba = Rc::new(RefCell::new(GBA::new(START_PC, &self.game_pack)));
+                self.stop_animation();
+                self.load_generation = self.load_generation.wrapping_add(1);
+                *self.gba.borrow_mut() = GBA::new(START_PC, &self.game_pack);
                 if self.save.len() != 0 {
                     self.gba.borrow_mut().load_save_file(&self.save);
                 }
@@ -324,16 +346,17 @@ impl Component for App {
                 self.keydown_closure = Some(key_down);
                 self.keyup_closure = Some(key_up);
 
-                if !self.game_pack.rom.is_empty() {
+                if self.save.is_empty() && !self.game_pack.rom.is_empty() {
                     let db = self.db.clone();
-                    let rom = self.game_pack.rom.clone();
+                    let rom_key = self.rom_key;
+                    let generation = self.load_generation;
                     let link = ctx.link().clone();
                     wasm_bindgen_futures::spawn_local(async move {
                         let db_ref = db.borrow();
                         if let Some(database) = db_ref.as_ref() {
-                            let key = save_state::battery_save_key(&rom);
+                            let key = save_state::battery_save_key_from_id(rom_key);
                             match storage::get_bytes(database, &key).await {
-                                Ok(Some(bytes)) => link.send_message(Msg::BatterySaveLoaded(bytes)),
+                                Ok(Some(bytes)) => link.send_message(Msg::BatterySaveLoaded(generation, bytes)),
                                 Ok(None) => {}
                                 Err(e) => error!("Failed to load battery save: {:?}", e),
                             }
@@ -477,68 +500,50 @@ impl Component for App {
                 true
             },
             Msg::Go => {
-                self.running.set(true);
-
-                let gba_clone = self.gba.clone();
-                let running = self.running.clone();
-                let turbo = self.turbo.clone();
-                let audio_player = self.audio_player.clone();
-                let recent_audio_samples = self.recent_audio_samples.clone();
-                let f = Rc::new(RefCell::new(None));
-                let g = f.clone();
-
-                let mut accumulator = FrameAccumulator::new();
-                let mut last_time = window().performance().unwrap().now();
-
-                *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
-                    if !running.get() {
-                        let _ = f.borrow_mut().take();
-                        return;
-                    }
-
-                    let now = window().performance().unwrap().now();
-                    let mut dt = (now - last_time) / 1000.0;
-                    last_time = now;
-
-                    let is_turbo = turbo.get();
-                    if is_turbo {
-                        dt *= TURBO_MULTIPLIER;
-                    }
-
-                    let max_frames = if is_turbo { MAX_CATCHUP_FRAMES_TURBO } else { MAX_CATCHUP_FRAMES };
-                    let frame_count = accumulator.frames_to_run(dt, max_frames);
-                    for _ in 0..frame_count {
-                        gba_clone.borrow_mut().frame();
-                        if is_turbo {
-                            let _ = std::mem::take(&mut gba_clone.borrow_mut().apu.sample_buffer);
-                        } else {
-                            push_audio_samples(&gba_clone, &audio_player, &recent_audio_samples);
-                        }
-                    }
-                    if frame_count > 0 {
-                        show_canvas(convert_frame_to_u8(&gba_clone.borrow().gpu.frame_buffer));
-                    }
-
-                    request_animation_frame(f.borrow().as_ref().unwrap());
-                }) as Box<dyn FnMut()>));
-
-                request_animation_frame(g.borrow().as_ref().unwrap());
+                if !self.initialized || self.running.replace(true) { return false; }
+                self.run_generation = self.run_generation.wrapping_add(1);
+                let generation = self.run_generation;
+                let link = ctx.link().clone();
+                self.animation_frame = Some(Closure::wrap(Box::new(move |time: f64| {
+                    link.send_message(Msg::AnimationFrame(generation, time));
+                }) as Box<dyn FnMut(f64)>));
+                self.last_frame_time = None;
+                self.accumulator = FrameAccumulator::new();
+                self.schedule_frame();
                 true
             },
+            Msg::AnimationFrame(generation, now) => {
+                if !self.running.get() || generation != self.run_generation { return false; }
+                self.animation_request = None;
+                let mut dt = self.last_frame_time.map(|last| (now - last) / 1000.0).unwrap_or(0.0);
+                self.last_frame_time = Some(now);
+                let turbo = self.turbo.get();
+                if turbo { dt *= TURBO_MULTIPLIER; }
+                let max = if turbo { MAX_CATCHUP_FRAMES_TURBO } else { MAX_CATCHUP_FRAMES };
+                let count = self.accumulator.frames_to_run(dt, max);
+                for _ in 0..count {
+                    self.gba.borrow_mut().frame();
+                    if turbo { self.gba.borrow_mut().apu.sample_buffer.clear(); }
+                    else { push_audio_samples(&self.gba, &self.audio_player, &self.recent_audio_samples); }
+                }
+                if count > 0 { show_canvas(convert_frame_to_u8(&self.gba.borrow().gpu.frame_buffer)); }
+                self.schedule_frame();
+                false
+            },
             Msg::Stop => {
-                self.running.set(false);
+                self.stop_animation();
                 if self.follow_pc {
                     self.follow_pc_disassemble();
                 }
 
                 if self.initialized && !self.game_pack.rom.is_empty() {
                     let db = self.db.clone();
-                    let rom = self.game_pack.rom.clone();
+                    let rom_key = self.rom_key;
                     let save_data = self.gba.borrow().get_save_data();
                     wasm_bindgen_futures::spawn_local(async move {
                         let db_ref = db.borrow();
                         if let Some(database) = db_ref.as_ref() {
-                            let key = save_state::battery_save_key(&rom);
+                            let key = save_state::battery_save_key_from_id(rom_key);
                             if let Err(e) = storage::put_bytes(database, &key, &save_data).await {
                                 error!("Failed to persist battery save: {:?}", e);
                             }
@@ -555,14 +560,14 @@ impl Component for App {
             Msg::SaveState => {
                 let slot = self.save_state_slot_str.parse::<u8>().unwrap_or(1).clamp(1, save_state::SAVE_STATE_SLOTS);
                 let db = self.db.clone();
-                let rom = self.game_pack.rom.clone();
+                let rom_key = self.rom_key;
                 let bytes = save_state::serialize_gba(&self.gba.borrow());
                 match bytes {
                     Ok(bytes) => {
                         wasm_bindgen_futures::spawn_local(async move {
                             let db_ref = db.borrow();
                             if let Some(database) = db_ref.as_ref() {
-                                let key = save_state::save_state_key(&rom, slot);
+                                let key = save_state::save_state_key_from_id(rom_key, slot);
                                 if let Err(e) = storage::put_bytes(database, &key, &bytes).await {
                                     error!("Failed to save state: {:?}", e);
                                 }
@@ -574,6 +579,10 @@ impl Component for App {
                 false
             }
             Msg::LoadState => {
+                self.stop_animation();
+                self.load_generation = self.load_generation.wrapping_add(1);
+                let generation = self.load_generation;
+                let rom_key = self.rom_key;
                 let slot = self.save_state_slot_str.parse::<u8>().unwrap_or(1).clamp(1, save_state::SAVE_STATE_SLOTS);
                 let db = self.db.clone();
                 let rom = self.game_pack.rom.clone();
@@ -582,11 +591,11 @@ impl Component for App {
                 wasm_bindgen_futures::spawn_local(async move {
                     let db_ref = db.borrow();
                     if let Some(database) = db_ref.as_ref() {
-                        let key = save_state::save_state_key(&rom, slot);
+                        let key = save_state::save_state_key_from_id(rom_key, slot);
                         match storage::get_bytes(database, &key).await {
                             Ok(Some(bytes)) => {
                                 match save_state::deserialize_gba(&bytes, &bios, &rom) {
-                                    Ok(gba) => link.send_message(Msg::StateLoaded(gba)),
+                                    Ok(gba) => link.send_message(Msg::StateLoaded(generation, gba)),
                                     Err(e) => error!("Failed to deserialize save state: {:?}", e),
                                 }
                             }
@@ -595,16 +604,19 @@ impl Component for App {
                         }
                     }
                 });
-                false
+                true
             }
-            Msg::StateLoaded(gba) => {
-                self.gba = Rc::new(RefCell::new(gba));
+            Msg::StateLoaded(generation, gba) => {
+                if generation != self.load_generation { return false; }
+                self.stop_animation();
+                *self.gba.borrow_mut() = gba;
                 if self.follow_pc {
                     self.follow_pc_disassemble();
                 }
                 true
             }
-            Msg::BatterySaveLoaded(bytes) => {
+            Msg::BatterySaveLoaded(generation, bytes) => {
+                if generation != self.load_generation { return false; }
                 self.gba.borrow_mut().load_save_file(&bytes);
                 true
             }
@@ -626,6 +638,16 @@ impl Component for App {
                 self.reset_nonce = self.reset_nonce.wrapping_add(1);
                 true
             }
+        }
+    }
+
+    fn destroy(&mut self, _ctx: &Context<Self>) {
+        self.stop_animation();
+        if let Some(closure) = self.keydown_closure.take() {
+            let _ = window().remove_event_listener_with_callback("keydown", closure.as_ref().unchecked_ref());
+        }
+        if let Some(closure) = self.keyup_closure.take() {
+            let _ = window().remove_event_listener_with_callback("keyup", closure.as_ref().unchecked_ref());
         }
     }
 
@@ -654,6 +676,21 @@ impl Component for App {
 }
 
 impl App {
+    fn schedule_frame(&mut self) {
+        if let Some(callback) = &self.animation_frame {
+            self.animation_request = Some(window().request_animation_frame(callback.as_ref().unchecked_ref()).expect("request animation frame"));
+        }
+    }
+
+    fn stop_animation(&mut self) {
+        self.running.set(false);
+        self.run_generation = self.run_generation.wrapping_add(1);
+        if let Some(id) = self.animation_request.take() { let _ = window().cancel_animation_frame(id); }
+        self.animation_frame = None;
+        self.last_frame_time = None;
+        self.accumulator = FrameAccumulator::new();
+    }
+
     pub fn view_nav(&self, _ctx: &Context<Self>) -> Html {
         html! {
             <header class="app-nav">

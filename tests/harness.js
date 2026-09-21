@@ -27,13 +27,14 @@ function isBlankCanvas(pixelData) {
 }
 
 async function withPage(port, pagePath, run) {
-    const server = spawn('python', ['-m', 'http.server', String(port)], { cwd: ROOT });
+    const server = spawn('python', ['-m', 'http.server', String(port)], { cwd: ROOT, windowsHide: true });
     server.stderr.on('data', () => {});
 
+    let browser;
     try {
         await waitForServer(`http://localhost:${port}/${pagePath}`, 10000);
 
-        const browser = await chromium.launch();
+        browser = await chromium.launch({ headless: process.env.HEADED !== '1', executablePath: process.env.BROWSER_PATH || undefined });
         const page = await browser.newPage();
 
         const consoleMessages = [];
@@ -47,8 +48,8 @@ async function withPage(port, pagePath, run) {
         console.log('--- console/page messages ---');
         consoleMessages.forEach((m) => console.log(m));
 
-        await browser.close();
     } finally {
+        if (browser) await browser.close();
         server.kill();
     }
 }

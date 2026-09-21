@@ -3,7 +3,7 @@
 
     var IMG_W = 972;
     var IMG_H = 573;
-    var SCREEN = { x: 282, y: 125, w: 405, h: 266 };
+    var SCREEN = { x: 282, y: 125, w: 405, h: 270 };
     var BEZEL = { x: 245, y: 86, w: 483, h: 411 };
 
     var WORLD_W = 3.0;
@@ -66,22 +66,40 @@
         return mesh;
     }
 
+    function lettering(text, w, h, color, italic) {
+        var canvas = document.createElement('canvas');
+        canvas.width = 1024; canvas.height = 128;
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = color;
+        ctx.font = (italic ? 'italic ' : '') + 'bold 90px Arial, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.translate(512, 68);
+        ctx.scale(1000 / Math.max(1, ctx.measureText(text).width), 1);
+        ctx.fillText(text, 0, 0);
+        var texture = new THREE.CanvasTexture(canvas);
+        return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({map: texture, transparent: true, depthWrite: false}));
+    }
+
     function buildGba(sourceCanvas) {
         var g = new THREE.Group();
 
         var shell = new THREE.MeshStandardMaterial({ color: 0x5b64ad, roughness: 0.45, metalness: 0.06 });
         var shellDark = new THREE.MeshStandardMaterial({ color: 0x474f8c, roughness: 0.5, metalness: 0.05 });
         var bezelMat = new THREE.MeshStandardMaterial({ color: 0x1b1d24, roughness: 0.35, metalness: 0.1 });
-        var button = new THREE.MeshStandardMaterial({ color: 0x2c2f3d, roughness: 0.5, metalness: 0.05 });
+        var button = new THREE.MeshStandardMaterial({ color: 0xb3b6c3, roughness: 0.5, metalness: 0.05 });
         var labelMat = new THREE.MeshStandardMaterial({ color: 0x9297a8, roughness: 0.88 });
         var screwMat = new THREE.MeshStandardMaterial({ color: 0x6f6a55, roughness: 0.4, metalness: 0.6 });
 
         var shape = new THREE.Shape();
-        var p0 = toWorld(OUTLINE[0][0], OUTLINE[0][1]);
-        shape.moveTo(p0[0], p0[1]);
-        for (var i = 1; i < OUTLINE.length; i++) {
-            var p = toWorld(OUTLINE[i][0], OUTLINE[i][1]);
-            shape.lineTo(p[0], p[1]);
+        for (var i = 0; i < OUTLINE.length; i++) {
+            var prev = OUTLINE[(i + OUTLINE.length - 1) % OUTLINE.length];
+            var curr = OUTLINE[i];
+            var next = OUTLINE[(i + 1) % OUTLINE.length];
+            var a = toWorld((prev[0] + curr[0]) / 2, (prev[1] + curr[1]) / 2);
+            var b = toWorld(curr[0], curr[1]);
+            var c = toWorld((curr[0] + next[0]) / 2, (curr[1] + next[1]) / 2);
+            if (i === 0) shape.moveTo(a[0], a[1]);
+            shape.quadraticCurveTo(b[0], b[1], c[0], c[1]);
         }
         shape.closePath();
 
@@ -119,15 +137,27 @@
             g.add(place(b, p[0], p[1], frontZ + 0.012));
         });
 
-        [[152, 350], [152, 396]].forEach(function (p) {
-            var s = place(plate(84, 22, 11, 0.022, button), p[0], p[1], frontZ + 0.008);
-            s.rotation.z = -0.32;
-            g.add(s);
+        [[190, 368], [192, 418]].forEach(function (p) {
+            var s = new THREE.Mesh(new THREE.CylinderGeometry(13 * SCALE, 13 * SCALE, 0.022, 24), button);
+            s.rotation.x = Math.PI / 2;
+            g.add(place(s, p[0], p[1], frontZ + 0.012));
         });
+        [['START', 134, 351], ['SELECT', 134, 401]].forEach(function (p) {
+            var label = lettering(p[0], 76 * SCALE, 18 * SCALE, '#a5a9cf');
+            place(label, p[1], p[2], frontZ + 0.012);
+            label.rotation.z = -0.25;
+            g.add(label);
+        });
+        [['A',860,210], ['B',786,244]].forEach(function (p) {
+            g.add(place(lettering(p[0], 28 * SCALE, 32 * SCALE, '#777b92'), p[1], p[2], frontZ + 0.034));
+        });
+        g.add(place(lettering('GAME BOY ADVANCE', 340 * SCALE, 30 * SCALE, '#d4d5dd', true), 486, 455, frontZ + 0.016));
+        g.add(place(lettering('Nintendo', 100 * SCALE, 19 * SCALE, '#b0b1d5'), 486, 62, frontZ + 0.016));
+        g.add(place(lettering('POWER', 62 * SCALE, 15 * SCALE, '#a5a9cf'), 823, 113, frontZ + 0.014));
 
         for (var j = 0; j < 6; j++) {
             var slat = place(plate(70, 6, 3, 0.01, shellDark), 798, 304 + j * 16, frontZ + 0.003);
-            slat.rotation.z = -0.26;
+            slat.rotation.z = 0.26;
             g.add(slat);
         }
 
@@ -138,12 +168,12 @@
         led.rotation.x = Math.PI / 2;
         g.add(place(led, 774, 113, frontZ + 0.008));
 
-        g.add(place(plate(108, 22, 11, 0.008, shellDark), 462, 62, frontZ + 0.003));
+        g.add(place(plate(108, 22, 11, 0.008, shellDark), 486, 62, frontZ + 0.003));
 
         // L/R sit on the top edge, set back in Z so the shell hides them head-on
         [[180, 104, 0.29], [792, 104, -0.29]].forEach(function (p) {
             var sb = new THREE.Mesh(
-                new THREE.BoxGeometry(196 * SCALE, 40 * SCALE, DEPTH * 0.70), button
+                new THREE.BoxGeometry(196 * SCALE, 48 * SCALE, DEPTH * 0.70), button
             );
             var c = toWorld(p[0], p[1]);
             sb.position.set(c[0], c[1], -DEPTH * 0.13);
@@ -206,17 +236,34 @@
             onBase(b, p[0], p[1], 1.0 * MM);
         });
 
-        [[-9, 12], [1.5, 12]].forEach(function (p) {
+        [[-7, 30], [7, 30]].forEach(function (p) {
             var b = new THREE.Mesh(new THREE.CylinderGeometry(3.2 * MM, 3.2 * MM, 1.8 * MM, 20), button);
             onBase(b, p[0], p[1], 0.6 * MM);
         });
 
-        for (var r = 0; r < 3; r++) {
-            for (var c = 0; c < 7; c++) {
-                var dot = new THREE.Mesh(new THREE.CylinderGeometry(0.7 * MM, 0.7 * MM, 0.6 * MM, 8), bezelMat);
-                onBase(dot, -6 + c * 2, -2 + r * 2.2, 0);
+        for (var r = 0; r < 4; r++) {
+            for (var c = 0; c < 4; c++) {
+                var dot = new THREE.Mesh(new THREE.CylinderGeometry(0.55 * MM, 0.55 * MM, 0.15 * MM, 8), bezelMat);
+                onBase(dot, -6 + c * 4, 6 + r * 4, 0);
             }
         }
+
+        var lightButton = new THREE.Mesh(new THREE.CylinderGeometry(2.5 * MM, 2.5 * MM, 1.0 * MM, 24), button);
+        onBase(lightButton, 0, -27, 0.8 * MM);
+        onBase(flat(lettering('?', 3.5 * MM, 3.5 * MM, '#353945')), 0, -27, 1.4 * MM);
+        [['SELECT',-7,23], ['START',7,23], ['A',27,-14], ['B',16.5,-5]].forEach(function (p) {
+            onBase(flat(lettering(p[0], (p[0].length > 1 ? 9 : 4) * MM, 2.6 * MM, '#c4c6ce')), p[1], p[2], 2.4 * MM);
+        });
+        var abRecess = flat(slab(28 * MM, 15 * MM, 7 * MM, 0.8 * MM, shellDark));
+        abRecess.rotation.z = 0.70;
+        onBase(abRecess, 21.75, -9.5, 0);
+        [0x48a836, 0x6d5231].forEach(function (color, i) {
+            var indicator = new THREE.Mesh(new THREE.BoxGeometry(1.3 * MM, 1.5 * MM, 2 * MM), new THREE.MeshBasicMaterial({color: color}));
+            onBase(indicator, 40, -29 + i * 6, -0.5 * MM);
+        });
+        var volume = new THREE.Mesh(new THREE.BoxGeometry(2 * MM, 3 * MM, 8 * MM), button);
+        volume.position.set(-W / 2, T * 0.55, 13 * MM);
+        g.add(volume);
 
         var slot = new THREE.Mesh(new THREE.BoxGeometry(58 * MM, 5 * MM, 2 * MM), bezelMat);
         slot.position.set(0, T * 0.45, D / 2 - 0.5 * MM);
@@ -247,9 +294,10 @@
         g.add(pivot);
 
         var lidZ = D / 2 - 5 * MM;
-        var lid = slab(W, D, 7 * MM, T, shell);
+        var lidThickness = 6 * MM;
+        var lid = slab(W, D, 7 * MM, lidThickness, shell);
         lid.rotation.x = -Math.PI / 2;
-        lid.position.set(0, T / 2, lidZ);
+        lid.position.set(0, lidThickness / 2, lidZ);
         pivot.add(lid);
 
         function onLid(mesh, xmm, zmm, drop) {
@@ -260,12 +308,14 @@
         }
 
         onLid(slab(72 * MM, 62 * MM, 3 * MM, 1.2 * MM, bezelMat), 0, 0, 0);
-        var spScreen = screenMesh(sourceCanvas, 61 * MM, 41 * MM);
+        var spScreen = screenMesh(sourceCanvas, 61.2 * MM, 40.8 * MM);
         spScreen.rotation.x = Math.PI / 2;
         spScreen.position.set(0, -(1.4 * MM), lidZ + 5 * MM);
         pivot.add(spScreen);
 
-        [[-31, -26], [0, -26], [31, -26], [-31, 28], [31, 28]].forEach(function (p) {
+        onLid(lettering('GAME BOY ADVANCE SP', 45 * MM, 3 * MM, '#b9bdc4', true), 0, -24, 1.0 * MM);
+
+        [[-34, 34], [0, 34], [34, 34], [-34, -33], [34, -33]].forEach(function (p) {
             var foot = new THREE.Mesh(new THREE.CylinderGeometry(2.6 * MM, 2.6 * MM, 0.8 * MM, 14), shellDark);
             foot.position.set(p[0] * MM, -(0.4 * MM), lidZ + p[1] * MM);
             pivot.add(foot);
@@ -303,9 +353,6 @@
         var sp = buildSp(sourceCanvas);
         group.add(gba);
         group.add(sp);
-
-        var screens = [];
-        group.traverse(function (o) { if (o.userData && o.userData.tex) screens.push(o.userData.tex); });
 
         var DEFAULTS = { gba: { x: -0.15, y: -0.5 }, sp: { x: 0.30, y: -0.45 } };
         var MIN_DIST = 2.6, MAX_DIST = 13.0;
@@ -416,10 +463,12 @@
             targetDist = Math.max(MIN_DIST, Math.min(MAX_DIST, targetDist * Math.exp(step * 0.0012)));
         }, { passive: false });
 
+        var lastWidth = 0, lastHeight = 0;
         function resize() {
             var w = host.clientWidth, h = host.clientHeight;
             if (!w || !h) return;
-            if (host.width !== w || host.height !== h) {
+            if (lastWidth !== w || lastHeight !== h) {
+                lastWidth = w; lastHeight = h;
                 renderer.setSize(w, h, false);
                 camera.aspect = w / h;
                 camera.updateProjectionMatrix();
@@ -469,7 +518,7 @@
                     -blend * focusPoint.z
                 );
             }
-            for (var i = 0; i < screens.length; i++) screens[i].needsUpdate = true;
+            if (active) active.userData.tex.needsUpdate = true;
             renderer.render(scene, camera);
         }
         frame();

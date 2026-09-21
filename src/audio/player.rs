@@ -81,3 +81,7 @@ impl AudioPlayer {
         Ok(())
     }
 }
+
+impl Drop for AudioPlayer {
+    fn drop(&mut self) { let _ = self.context.close(); }
+}

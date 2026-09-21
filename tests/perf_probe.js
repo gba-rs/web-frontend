@@ -7,9 +7,12 @@ const ROM_PATH = process.env.GBA_ROM || 'C:/Users/gnoe2/Projects/GBA/gba-resourc
 async function main() {
     await withPage(PORT, 'index.html#/', async (page) => {
         await page.evaluate(() => {
-            window.__rafCount = 0;
-            const realRaf = window.requestAnimationFrame.bind(window);
-            window.requestAnimationFrame = (cb) => realRaf((t) => { window.__rafCount++; cb(t); });
+            window.__presentCount = 0;
+            const put = CanvasRenderingContext2D.prototype.putImageData;
+            CanvasRenderingContext2D.prototype.putImageData = function (...args) {
+                if (this.canvas.id === 'gba-canvas2') window.__presentCount++;
+                return put.apply(this, args);
+            };
         });
 
         await page.waitForSelector('input[type=file]', { state: 'attached', timeout: 5000 });
@@ -20,14 +23,14 @@ async function main() {
 
         await page.click('button:has-text("Play")');
         await page.waitForTimeout(500);
-        await page.evaluate(() => { window.__rafCount = 0; });
+        await page.evaluate(() => { window.__presentCount = 0; });
 
         const durationMs = 3000;
         await page.waitForTimeout(durationMs);
 
-        const count = await page.evaluate(() => window.__rafCount);
+        const count = await page.evaluate(() => window.__presentCount);
         const fps = count / (durationMs / 1000);
-        console.log(`rAF callbacks in ${durationMs}ms: ${count} (~${fps.toFixed(1)} fps)`);
+        console.log(`Canvas presentations in ${durationMs}ms: ${count} (~${fps.toFixed(1)} fps)`);
     });
 }
 

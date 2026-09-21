@@ -19,11 +19,11 @@ impl FrameAccumulator {
     }
 
     pub fn frames_to_run(&mut self, dt_seconds: f64, max_frames: u32) -> u32 {
-        self.time_accumulator = (self.time_accumulator + dt_seconds)
+        self.time_accumulator += dt_seconds.max(0.0)
             .min(GBA_FRAME_SECONDS * max_frames as f64);
 
         let mut count = 0;
-        while self.time_accumulator >= GBA_FRAME_SECONDS {
+        while count < max_frames && self.time_accumulator >= GBA_FRAME_SECONDS {
             self.time_accumulator -= GBA_FRAME_SECONDS;
             count += 1;
         }
@@ -82,4 +82,12 @@ mod tests {
     fn turbo_cap_is_not_throttled_by_the_normal_play_cap() {
         assert!(MAX_CATCHUP_FRAMES_TURBO as f64 >= TURBO_MULTIPLIER);
     }
+    #[test]
+    fn missed_refresh_does_not_discard_existing_fraction() {
+        let mut acc = FrameAccumulator::new();
+        assert_eq!(acc.frames_to_run(GBA_FRAME_SECONDS * 0.75, 2), 0);
+        assert_eq!(acc.frames_to_run(GBA_FRAME_SECONDS * 2.0, 2), 2);
+        assert_eq!(acc.frames_to_run(GBA_FRAME_SECONDS * 0.25, 2), 1);
+    }
+
 }

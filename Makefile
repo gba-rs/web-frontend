@@ -3,7 +3,7 @@ build:
 	rollup ./main.js --format iife --file ./pkg/bundle.js
 
 run: build
-	python -m http.server 8080
+	python dev_server.py 8080
 
 test: build
 	npm test
