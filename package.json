@@ -1,0 +1,24 @@
+{
+  "name": "web-frontend",
+  "version": "1.0.0",
+  "description": "Web Frontend for the [gba-emu](https://github.com/gba-rs/gba-emu) hosted on github pages [here](https://gba-rs.github.io/web-frontend/)",
+  "main": "main.js",
+  "scripts": {
+    "test": "node tests/headless_smoke.js && node tests/headless_smoke_player.js && node tests/headless_navigation.js && node tests/loading_lifecycle.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gba-rs/web-frontend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/gba-rs/web-frontend/issues"
+  },
+  "homepage": "https://github.com/gba-rs/web-frontend#readme",
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}

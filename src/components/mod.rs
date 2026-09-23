@@ -1,4 +1,3 @@
-pub mod navbar;
 pub mod registers;
 pub mod cpsr;
 pub mod status;
@@ -9,3 +8,7 @@ pub mod palette_viewer;
 pub mod canvas;
 pub mod controls;
 pub mod io;
+pub mod sound_panel;
+pub mod sprites_panel;
+pub mod tiles_panel;
+pub mod backgrounds_panel;

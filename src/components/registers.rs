@@ -1,22 +1,29 @@
 use yew::prelude::*;
-use yew::{html, Component, ComponentLink, InputData, KeyboardEvent, Html, ShouldRender};
+use yew::{html, Component, Context, Html};
+use web_sys::{InputEvent, KeyboardEvent};
 use gba_emulator::gba::GBA;
 use std::rc::Rc;
 use std::cell::RefCell;
 use log::{info};
+use crate::dom_util::input_value;
 
 pub struct Registers {
     props: RegistersProp,
     updated_reg_hex: String,
     updated_reg_dec: String,
     update_reg_num: u8,
-    link: ComponentLink<Self>
 }
 
 #[derive(Properties, Clone)]
 pub struct RegistersProp {
     pub gba: Rc<RefCell<GBA>>,
     pub hex: bool
+}
+
+impl PartialEq for RegistersProp {
+    fn eq(&self, other: &Self) -> bool {
+        Rc::ptr_eq(&self.gba, &other.gba) && self.hex == other.hex
+    }
 }
 
 pub enum RegUpdateType {
@@ -35,17 +42,21 @@ impl Component for Registers {
     type Message = Msg;
     type Properties = RegistersProp;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Registers {
-            props: props,
+            props: ctx.props().clone(),
             updated_reg_dec: "".to_string(),
             updated_reg_hex: "".to_string(),
             update_reg_num: 0,
-            link: link
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
+        self.props = ctx.props().clone();
+        true
+    }
+
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::StartUpdate(init_string, update_type) => {
                 match update_type {
@@ -101,16 +112,11 @@ impl Component for Registers {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.props = props;
-        true
-    }
-
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
             <div>
                 <h4>{"Registers"}</h4>
-                <table class="table register-table">
+                <table class="data-table">
                     <thead>
                         <tr>
                             <th scope="col">{"Reg"}</th>
@@ -126,17 +132,17 @@ impl Component for Registers {
                                 <tr>
                                     <td class="text-left">{format!("r{}", val)}</td>
                                     <td class="text-right">
-                                        <input class="hex-edit hex-edit-word" type="text" value={format!("{:08X}", reg_val)} 
-                                        onclick=self.link.callback(move |_|{ Msg::StartUpdate(format!("{:08X}", reg_val), RegUpdateType::Hex) })
-                                        oninput=self.link.callback(move |e: InputData|{ Msg::UpdateReg(e.value, reg_num, RegUpdateType::Hex) })
-                                        onkeypress=self.link.callback(|e: KeyboardEvent|{ if e.key() == "Enter" { Msg::FinishUpdate(RegUpdateType::Hex) } else { Msg::Nope } })
+                                        <input class="hex-edit hex-edit-word" type="text" value={format!("{:08X}", reg_val)}
+                                        onclick={ctx.link().callback(move |_|{ Msg::StartUpdate(format!("{:08X}", reg_val), RegUpdateType::Hex) })}
+                                        oninput={ctx.link().callback(move |e: InputEvent|{ Msg::UpdateReg(input_value(&e), reg_num, RegUpdateType::Hex) })}
+                                        onkeypress={ctx.link().callback(|e: KeyboardEvent|{ if e.key() == "Enter" { Msg::FinishUpdate(RegUpdateType::Hex) } else { Msg::Nope } })}
                                         />
                                     </td>
                                     <td class="text-right">
                                         <input class="hex-edit hex-edit-word" type="text" value={format!("{}", reg_val)}
-                                        onclick=self.link.callback(move |_|{ Msg::StartUpdate(format!("{}", reg_val), RegUpdateType::Dec) })
-                                        oninput=self.link.callback(move |e: InputData|{ Msg::UpdateReg(e.value, reg_num, RegUpdateType::Dec) })
-                                        onkeypress=self.link.callback(|e: KeyboardEvent|{ if e.key() == "Enter" { Msg::FinishUpdate(RegUpdateType::Dec) } else { Msg::Nope } })
+                                        onclick={ctx.link().callback(move |_|{ Msg::StartUpdate(format!("{}", reg_val), RegUpdateType::Dec) })}
+                                        oninput={ctx.link().callback(move |e: InputEvent|{ Msg::UpdateReg(input_value(&e), reg_num, RegUpdateType::Dec) })}
+                                        onkeypress={ctx.link().callback(|e: KeyboardEvent|{ if e.key() == "Enter" { Msg::FinishUpdate(RegUpdateType::Dec) } else { Msg::Nope } })}
                                         />
                                     </td>
                                 </tr>

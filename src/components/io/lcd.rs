@@ -4,19 +4,10 @@ use crate::components::io_reg::{IORegisters};
 impl IORegisters {
     pub fn view_display_control(&self) -> Html {
         html! {
-            <div class="io-reg-section">
-                <div class="io-reg-section-header" id="display-control-heading">
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#display-control"
-                                aria-expanded="true" aria-controls="display-control">
-                            {"Display Control"}
-                        </button>
-                    </h5>
-                </div>
+            <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Display Control"}</summary>
 
-                <div id="display-control" class="io-reg-section-body collapse" aria-labelledby="display-control-heading">
-                    <div >
-                        <table class="table register-table">
+                        <table class="data-table">
                             <thead>
                             <tr>
                                 <th scope="col">{"Field"}</th>
@@ -82,27 +73,17 @@ impl IORegisters {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
+                    
+</details>
         }
     }
 
     pub fn view_display_status(&self) -> Html {
         html! {
-            <div class="io-reg-section">
-                <div class="io-reg-section-header" id="display-status-heading">
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#display-status"
-                                aria-expanded="true" aria-controls="display-status">
-                            {"Display Status"}
-                        </button>
-                    </h5>
-                </div>
+            <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Display Status"}</summary>
 
-                <div id="display-status" class="io-reg-section-body collapse" aria-labelledby="display-status-heading">
-                    <div >
-                        <table class="table register-table">
+                        <table class="data-table">
                             <thead>
                             <tr>
                                 <th scope="col">{"Field"}</th>
@@ -140,27 +121,17 @@ impl IORegisters {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
+                    
+</details>
         }
     }
 
     pub fn view_green_swap(&self) -> Html {
         html! {
-            <div class="io-reg-section">
-                <div class="io-reg-section-header" id="green-swap-heading">
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#green-swap"
-                                aria-expanded="true" aria-controls="green-swap">
-                            {"Green Swap"}
-                        </button>
-                    </h5>
-                </div>
+            <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Green Swap"}</summary>
 
-                <div id="green-swap" class="io-reg-section-body collapse" aria-labelledby="green-swap-heading">
-                    <div >
-                        <table class="table register-table">
+                        <table class="data-table">
                             <thead>
                             <tr>
                                 <th scope="col">{"Field"}</th>
@@ -174,27 +145,17 @@ impl IORegisters {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
+                    
+</details>
         }
     }
 
     pub fn view_bg(&self, bg_number: usize) -> Html {
         html! {
-            <div class="io-reg-section">
-                <div class="io-reg-section-header" id={format!("bg{}-heading", bg_number + 1)}>
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target={format!("#bg{}", bg_number + 1)}
-                                aria-expanded="true" aria-controls={format!("bg{}", bg_number + 1)}>
-                            {format!("Background {}", bg_number + 1)}
-                        </button>
-                    </h5>
-                </div>
+            <details class="io-reg-section">
+<summary class="io-reg-section-header">{format!("Background {}", bg_number + 1)}</summary>
 
-                <div id={format!("bg{}", bg_number + 1)} class="io-reg-section-body collapse" aria-labelledby={format!("bg{}-heading", bg_number + 1)}  >
-                    <div >
-                        <table class="table register-table">
+                        <table class="data-table">
                             <thead>
                             <tr>
                                 <th scope="col">{"Field"}</th>
@@ -240,27 +201,17 @@ impl IORegisters {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
+                    
+</details>
         }
     }
 
     pub fn view_bg_affine_component(&self, bg_number: usize) -> Html {
         html! {
-            <div class="io-reg-section">
-                <div class="io-reg-section-header" id={format!("bg_affine{}-heading", bg_number + 1)}>
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target={format!("#bg_affine{}", bg_number + 1)}
-                                aria-expanded="true" aria-controls={format!("bg_affine{}", bg_number + 1)}>
-                            {format!("BG Affine Component {}", bg_number + 1)}
-                        </button>
-                    </h5>
-                </div>
+            <details class="io-reg-section">
+<summary class="io-reg-section-header">{format!("BG Affine Component {}", bg_number + 1)}</summary>
 
-                <div id={format!("bg_affine{}", bg_number + 1)} class="io-reg-section-body collapse" aria-labelledby={format!("bg_affine{}-heading", bg_number + 1)}  >
-                    <div >
-                        <table class="table register-table">
+                        <table class="data-table">
                             <thead>
                             <tr>
                                 <th scope="col">{"Field"}</th>
@@ -350,27 +301,17 @@ impl IORegisters {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
+                    
+</details>
         }
     }
 
     pub fn view_window(&self, window_number: usize) -> Html {
         html! {
-            <div class="io-reg-section">
-                <div class="io-reg-section-header" id={format!("window{}-heading", window_number + 1)}>
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target={format!("#window{}", window_number + 1)}
-                                aria-expanded="true" aria-controls={format!("window{}", window_number + 1)}>
-                            {format!("Window {}", window_number + 1)}
-                        </button>
-                    </h5>
-                </div>
+            <details class="io-reg-section">
+<summary class="io-reg-section-header">{format!("Window {}", window_number + 1)}</summary>
 
-                <div id={format!("window{}", window_number + 1)} class="io-reg-section-body collapse" aria-labelledby={format!("window{}-heading", window_number + 1)}  >
-                    <div >
-                        <table class="table register-table">
+                        <table class="data-table">
                             <thead>
                             <tr>
                                 <th scope="col">{"Field"}</th>
@@ -396,27 +337,17 @@ impl IORegisters {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
+                    
+</details>
         }
     }
 
     pub fn view_control_window_inside(&self) -> Html {
         html! {
-            <div class="io-reg-section">
-                <div class="io-reg-section-header" id="control-window-inside-heading">
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#control-window-inside"
-                                aria-expanded="true" aria-controls="control-window-inside">
-                            {"Control Window Inside"}
-                        </button>
-                    </h5>
-                </div>
+            <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Control Window Inside"}</summary>
 
-                <div id="control-window-inside" class="io-reg-section-body collapse" aria-labelledby="control-window-inside-heading">
-                    <div >
-                        <table class="table register-table">
+                        <table class="data-table">
                             <thead>
                             <tr>
                                 <th scope="col">{"Field"}</th>
@@ -450,27 +381,17 @@ impl IORegisters {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
+                    
+</details>
         }
     }
 
     pub fn view_control_window_outside(&self) -> Html {
         html! {
-            <div class="io-reg-section">
-                <div class="io-reg-section-header" id="control-window-outside-heading">
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#control-window-outside"
-                                aria-expanded="true" aria-controls="control-window-outside">
-                            {"Control Window Outside"}
-                        </button>
-                    </h5>
-                </div>
+            <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Control Window Outside"}</summary>
 
-                <div id="control-window-outside" class="io-reg-section-body collapse" aria-labelledby="control-window-outside-heading">
-                    <div >
-                        <table class="table register-table">
+                        <table class="data-table">
                             <thead>
                             <tr>
                                 <th scope="col">{"Field"}</th>
@@ -504,27 +425,17 @@ impl IORegisters {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
+                    
+</details>
         }
     }
 
     pub fn view_mosaic_size(&self) -> Html {
         html! {
-            <div class="io-reg-section">
-                <div class="io-reg-section-header" id="mosaic-size-heading">
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#mosaic-size"
-                                aria-expanded="true" aria-controls="mosaic-size">
-                            {"Mosaic Size"}
-                        </button>
-                    </h5>
-                </div>
+            <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Mosaic Size"}</summary>
 
-                <div id="mosaic-size" class="io-reg-section-body collapse" aria-labelledby="mosaic-size-heading">
-                    <div >
-                        <table class="table register-table">
+                        <table class="data-table">
                             <thead>
                             <tr>
                                 <th scope="col">{"Field"}</th>
@@ -550,27 +461,17 @@ impl IORegisters {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
+                    
+</details>
         }
     }
 
     pub fn view_color_spec_effect_selection(&self) -> Html {
         html! {
-            <div class="io-reg-section">
-                <div class="io-reg-section-header" id="color-spec-effec-sel-heading">
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#color-spec-effec-sel"
-                                aria-expanded="true" aria-controls="color-spec-effec-sel">
-                            {"Color Special Effect Selection"}
-                        </button>
-                    </h5>
-                </div>
+            <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Color Special Effect Selection"}</summary>
 
-                <div id="color-spec-effec-sel" class="io-reg-section-body collapse" aria-labelledby="color-spec-effec-sel-heading">
-                    <div >
-                        <table class="table register-table">
+                        <table class="data-table">
                             <thead>
                             <tr>
                                 <th scope="col">{"Field"}</th>
@@ -632,27 +533,17 @@ impl IORegisters {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
+                    
+</details>
         }
     }
 
     pub fn view_alpha_blending(&self) -> Html {
         html! {
-            <div class="io-reg-section">
-                <div class="io-reg-section-header" id="alpha-blending-heading">
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#alpha-blending"
-                                aria-expanded="true" aria-controls="alpha-blending">
-                            {"Alpha Blending Coefficients"}
-                        </button>
-                    </h5>
-                </div>
+            <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Alpha Blending Coefficients"}</summary>
 
-                <div id="alpha-blending" class="io-reg-section-body collapse" aria-labelledby="alpha-blending-heading">
-                    <div >
-                        <table class="table register-table">
+                        <table class="data-table">
                             <thead>
                             <tr>
                                 <th scope="col">{"Field"}</th>
@@ -670,27 +561,17 @@ impl IORegisters {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
+                    
+</details>
         }
     }
 
     pub fn view_brightness(&self) -> Html {
         html! {
-            <div class="io-reg-section">
-                <div class="io-reg-section-header" id="brightness-heading">
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#brightness"
-                                aria-expanded="true" aria-controls="brightness">
-                            {"Brightness Coefficient"}
-                        </button>
-                    </h5>
-                </div>
+            <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Brightness Coefficient"}</summary>
 
-                <div id="brightness" class="io-reg-section-body collapse" aria-labelledby="brightness-heading">
-                    <div >
-                        <table class="table register-table">
+                        <table class="data-table">
                             <thead>
                             <tr>
                                 <th scope="col">{"Field"}</th>
@@ -704,9 +585,8 @@ impl IORegisters {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
+                    
+</details>
         }
     }
 }

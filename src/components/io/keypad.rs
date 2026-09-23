@@ -4,19 +4,10 @@ use crate::components::io_reg::{IORegisters};
 impl IORegisters {
     pub fn view_key_status(&self) -> Html {
         html! {
-            <div class="io-reg-section">
-                <div class="io-reg-section-header" id="key-status-heading">
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#key-status"
-                                aria-expanded="true" aria-controls="key-status">
-                            {"Key Status"}
-                        </button>
-                    </h5>
-                </div>
+            <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Key Status"}</summary>
 
-                <div id="key-status" class="io-reg-section-body collapse" aria-labelledby="key-status-heading">
-                    <div >
-                        <table class="table register-table">
+                        <table class="data-table">
                             <thead>
                             <tr>
                                 <th scope="col">{"Field"}</th>
@@ -66,27 +57,17 @@ impl IORegisters {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
+                    
+</details>
         }
     }
 
     pub fn view_key_interrupt_control(&self) -> Html {
         html! {
-            <div class="io-reg-section">
-                <div class="io-reg-section-header" id="key-interrupt-control-heading">
-                    <h5 class="mb-0">
-                        <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#key-interrupt-control"
-                                aria-expanded="true" aria-controls="key-interrupt-control">
-                            {"Key Interrupt Control"}
-                        </button>
-                    </h5>
-                </div>
+            <details class="io-reg-section">
+<summary class="io-reg-section-header">{"Key Interrupt Control"}</summary>
 
-                <div id="key-interrupt-control" class="io-reg-section-body collapse" aria-labelledby="key-interrupt-control-heading">
-                    <div >
-                        <table class="table register-table">
+                        <table class="data-table">
                             <thead>
                             <tr>
                                 <th scope="col">{"Field"}</th>
@@ -144,9 +125,8 @@ impl IORegisters {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
+                    
+</details>
         }
     }
 }
